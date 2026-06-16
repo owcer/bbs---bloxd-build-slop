@@ -1,0 +1,781 @@
+```js
+/*sbr by Ocelote, licensable under CC0*/(sbr=function(...e){e.length>0&&sbr.rawInputQueue.push(e)}).rawInputQueue=[],sbr.buildQueue=[],sbr.rateLimitCooldown=0,sbr.SPECIAL_BLOCK_IDS=new Set([204,205,206,207,952,953,954,955,1291,1292,1293,1294,1510,2088,2089,2090,2091]),sbr.MAX_RECT_VOLUME=360,sbr.TICK_BUDGET=250,sbr.COST_SCAN_BLOCK=.5,sbr.COST_SCAN_DATA=.7,sbr.COST_BUILD_RECT=10,sbr.COST_BUILD_DATA=1,sbr.COST_SPLIT_RECT=2,sbr.COST_CHUNK_CHECK=8,sbr.free=function(){return 0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length&&0===sbr.ior.free()},sbr.kill=function(){sbr.rawInputQueue=[],sbr.buildQueue=[],sbr.ior.kill()},sbr.getVol=function(e,t){let l=[t[0]-e[0]+1,t[1]-e[1]+1,t[2]-e[2]+1];return{dims:l,vol:l[0]*l[1]*l[2]}},sbr.deconstructWalls=function(e){let[t,l,u,n,$]=e,s=[],i=Math.min(t[0],l[0]),o=Math.min(t[1],l[1]),a=Math.min(t[2],l[2]),r=Math.max(t[0],l[0]),c=Math.max(t[1],l[1]),_=Math.max(t[2],l[2]);n&&s.push([[i,o,a],[r,o,_],u]),$&&s.push([[i,c,a],[r,c,_],u]),s.push([[i,o,a],[i,c,_],u]),s.push([[r,o,a],[r,c,_],u]);let C=n?o+1:o,d=$?c-1:c;return C<=d&&i+1<=r-1&&(s.push([[i+1,C,a],[r-1,d,a],u]),s.push([[i+1,C,_],[r-1,d,_],u])),s},sbr.checkAndLoadChunks=function(e,t){let l=[Math.min(e[0],t[0]),Math.min(e[1],t[1]),Math.min(e[2],t[2])],u=[Math.max(e[0],t[0]),Math.max(e[1],t[1]),Math.max(e[2],t[2])],n=!0;for(let $=l[0];$<=u[0];$+=32)for(let s=l[1];s<=u[1];s+=32)for(let i=l[2];i<=u[2];i+=32)api.isBlockInLoadedChunk($,s,i)||(api.getBlockId($,s,i),n=!1);return n},sbr.getTaskRange=function(e){return e?"gclone"===e[0]||"rect_with_data"===e[0]?[e[1],e[2]]:3===e.length&&Array.isArray(e[0])?[e[0],e[1]]:2===e.length&&Array.isArray(e[0])?[e[0],e[0]]:[e.slice(0,3),e.slice(0,3)]:[[0,0,0],[0,0,0]]},sbr.tick=function(){if(sbr.rateLimitCooldown>0){sbr.rateLimitCooldown--;return}if(0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length){sbr.ior.tick();return}let e=0;for(;sbr.rawInputQueue.length>0&&e<50;){e++;let t=sbr.rawInputQueue.shift();for(;1===t.length&&Array.isArray(t[0]);)t=t[0];t.length>0&&(!Array.isArray(t[0])||Array.isArray(t[0])&&!Array.isArray(t[0][0]))&&(t=[t]);for(let l=0;l<t.length;l++){let u=t[l];if(u&&Array.isArray(u)){if(5===u.length&&"boolean"==typeof u[3]){let n=sbr.deconstructWalls(u);t.splice(l,1,...n),l--}else 4===u.length&&u.every(e=>Array.isArray(e))?sbr.buildQueue.push(["gclone",...u,{scanPos:null,run:null}]):sbr.buildQueue.push(u)}}}let $=sbr.TICK_BUDGET,s=0;for(;$>0&&sbr.buildQueue.length>0&&s<1e3;){s++;let i=sbr.buildQueue[0],[o,a]=sbr.getTaskRange(i);if(!sbr.checkAndLoadChunks(o,a)){$-=sbr.COST_CHUNK_CHECK;for(let r=1;r<Math.min(sbr.buildQueue.length,15)&&$>=sbr.COST_CHUNK_CHECK;r++){let[c,_]=sbr.getTaskRange(sbr.buildQueue[r]);sbr.checkAndLoadChunks(c,_),$-=sbr.COST_CHUNK_CHECK}break}try{if("gclone"===i[0]){let[C,d,f,h,T,g]=i,k=[Math.min(d[0],f[0]),Math.min(d[1],f[1]),Math.min(d[2],f[2])],A=[Math.max(d[0],f[0]),Math.max(d[1],f[1]),Math.max(d[2],f[2])],m=[A[0]-k[0]+1,A[1]-k[1]+1,A[2]-k[2]+1],b=[h[0]-d[0],h[1]-d[1],h[2]-d[2]];null===g.scanPos&&(g.scanPos=[0,0,0],g.run={startPos:[0,0,0],blockType:api.getBlockId(k[0],k[1],k[2])});let p=!1;for(;$>=sbr.COST_SCAN_BLOCK;){$-=sbr.COST_SCAN_BLOCK;let[S,B,I]=g.scanPos,L=api.getBlockId(k[0]+S,k[1]+B,k[2]+I);if(L!==g.run.blockType||S===m[0]-1){let O=g.run.startPos,Q=L!==g.run.blockType?S-1:S,D=g.run.blockType;if(D&&0!==D){let y=[k[0]+O[0]+b[0],k[1]+B+b[1],k[2]+I+b[2]],P=[k[0]+Q+b[0],k[1]+B+b[1],k[2]+I+b[2]];if(sbr.SPECIAL_BLOCK_IDS.has(D)){let U=[];for(let E=O[0];E<=Q&&$>=sbr.COST_SCAN_DATA;E++)$-=sbr.COST_SCAN_DATA,U.push(api.getBlockData(k[0]+E,k[1]+B,k[2]+I));sbr.buildQueue.splice(1,0,["rect_with_data",y,P,String(D),U,0])}else sbr.buildQueue.splice(1,0,[y,P,String(D)])}g.run={startPos:[S,B,I],blockType:L}}if(g.scanPos[0]++,g.scanPos[0]>=m[0]&&(g.scanPos[0]=0,g.scanPos[1]++,g.scanPos[1]>=m[1]&&(g.scanPos[1]=0,g.scanPos[2]++),g.scanPos[2]<m[2]&&(g.run={startPos:[...g.scanPos],blockType:api.getBlockId(k[0],k[1]+g.scanPos[1],k[2]+g.scanPos[2])})),g.scanPos[2]>=m[2]){p=!0;break}}p&&sbr.buildQueue.shift()}else if("rect_with_data"===i[0]){let[w,K,x,R,N,H]=i;0===H&&(api.setBlockRect(K,x,R),$-=sbr.COST_BUILD_RECT);let v=H;for(;$>=sbr.COST_BUILD_DATA&&v<N.length;)$-=sbr.COST_BUILD_DATA,null!==N[v]&&api.setBlockData(K[0]+v,K[1],K[2],N[v]),v++;v>=N.length?sbr.buildQueue.shift():i[5]=v}else if(3===i.length&&Array.isArray(i[0])){let[M,V,G]=i,W=[Math.min(M[0],V[0]),Math.min(M[1],V[1]),Math.min(M[2],V[2])],X=[Math.max(M[0],V[0]),Math.max(M[1],V[1]),Math.max(M[2],V[2])],{dims:j,vol:q}=sbr.getVol(W,X);if(q>sbr.MAX_RECT_VOLUME){let z=j.indexOf(Math.max(...j)),F=W[z]+Math.floor(j[z]/2)-1,J=[...X];J[z]=F;let Y=[...W];Y[z]=F+1,sbr.buildQueue.splice(0,1,[W,J,G],[Y,X,G]),$-=sbr.COST_SPLIT_RECT}else api.setBlockRect(W,X,String(G)),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_RECT}else if(2===i.length&&Array.isArray(i[0]))api.setBlockData(i[0][0],i[0][1],i[0][2],i[1]),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_DATA;else if(4!==i.length||Array.isArray(i[0]))sbr.buildQueue.shift();else{let Z=i[3];"object"==typeof Z&&null!==Z?(api.setBlockData(i[0],i[1],i[2],Z),$-=sbr.COST_BUILD_DATA):(api.setBlock(i[0],i[1],i[2],String(Z)),$-=sbr.COST_BUILD_RECT/10),sbr.buildQueue.shift()}}catch(ee){let et=ee.message?ee.message.toLowerCase():"";if(et.includes("rate limit"))sbr.rateLimitCooldown=5;else if(et.includes("interrupted"))break;else api.log("sbr error: "+ee.message),sbr.buildQueue.shift()}}};{let e=(t,l,u,n)=>{("number"!=typeof n||isNaN(n))&&(n=1),("number"!=typeof l||isNaN(l))&&(l=0),("number"!=typeof u||isNaN(u))&&(u=l,l=0),n=Math.abs(n)*Math.sign(u-l),e.stack.push({cb:t,start:l,end:u,inc:n,count:0})};e.stack=[],e.tickBudget=100,e.defaultBudgetUsed=1,e.free=()=>!e.stack.length,e.kill=()=>void(e.stack=[]),e.tick=()=>{let t=e.tickBudget;for(;t>0&&e.stack.length>0;){let l=e.stack[e.stack.length-1],u=l.count*l.inc+l.start;(l.inc>0?u<l.end:u>l.end)?(t-=l.cb(u)??e.defaultBudgetUsed,l.count++):e.stack.pop()}},e.levels=(t,l)=>{let u=t;for(let n=0;n<l.length;n++){let $=u,[s,i,o]=l[l.length-1-n];u=t=>e(e=>$([...t,e]),s,i,o)}u([])},sbr.ior=e}
+
+//use like this:
+tick=()=>{
+sbr.tick()
+//rest of you code
+}
+```
+consider this library.
+Here is a block pallette you can use (don't use anything outside that may not even exist):
+```
+Air
+Dirt
+Messy Dirt
+Grass Block
+Sand
+Clay
+Gravel
+Snow
+Maple Log
+Pine Log
+Plum Log
+Cedar Log
+Aspen Log
+Jungle Log
+Maple Wood Planks
+Aspen Wood Planks
+Plum Wood Planks
+Jungle Wood Planks
+Pine Wood Planks
+Cedar Wood Planks
+Barkless Maple Log
+Barkless Aspen Log
+Barkless Plum Log
+Barkless Jungle Log
+Barkless Pine Log
+Barkless Cedar Log
+Stone
+Messy Stone
+Smooth Stone
+Diorite
+Smooth Diorite
+Andesite
+Smooth Andesite
+Granite
+Smooth Granite
+Sandstone
+Yellowstone
+Coal Ore
+Iron Ore
+Gold Ore
+Lapis Lazuli Ore
+Emerald Ore
+Diamond Ore
+Block of Coal
+Block of Iron
+Block of Gold
+Block of Lapis Lazuli
+Block of Emerald
+White Wool
+Orange Wool
+Magenta Wool
+Light Blue Wool
+Yellow Wool
+Lime Wool
+Pink Wool
+Gray Wool
+Light Gray Wool
+Cyan Wool
+Purple Wool
+Blue Wool
+Brown Wool
+Green Wool
+Red Wool
+Black Wool
+Baked Clay
+White Baked Clay
+Orange Baked Clay
+Magenta Baked Clay
+Light Blue Baked Clay
+Yellow Baked Clay
+Lime Baked Clay
+Pink Baked Clay
+Gray Baked Clay
+Light Gray Baked Clay
+Cyan Baked Clay
+Purple Baked Clay
+Blue Baked Clay
+Brown Baked Clay
+Green Baked Clay
+Red Baked Clay
+Black Baked Clay
+Gray Concrete
+Light Gray Concrete
+Black Concrete
+Blue Concrete
+Brown Concrete
+Cyan Concrete
+Light Blue Concrete
+Lime Concrete
+Magenta Concrete
+Orange Concrete
+Pink Concrete
+Purple Concrete
+Red Concrete
+White Concrete
+Green Concrete
+Yellow Concrete
+Pine Leaves
+Aspen Leaves
+Maple Leaves
+Jungle Leaves
+Watermelon
+Glass
+Black Glass
+Blue Glass
+Brown Glass
+Cyan Glass
+Gray Glass
+Light Gray Glass
+Green Glass
+Light Blue Glass
+Lime Glass
+Magenta Glass
+Orange Glass
+Pink Glass
+Purple Glass
+Red Glass
+White Glass
+Yellow Glass
+Dim Lamp On
+Dim Lamp Off
+Water
+Bricks
+Stone Bricks
+Dark Red Brick
+Dark Red Stone
+Block of Quartz
+Chiseled Block of Quartz
+Engraved Stone
+Mossy Stone Bricks
+Cracked Stone Bricks
+Smooth Sandstone
+Engraved Sandstone
+Ice
+Obsidian
+Hay Bale
+Sponge
+Beacon
+temp
+Golden Decoration
+Moonstone Explosive
+Bedrock
+Smooth Double Stone Slab
+Cactus
+Grass
+Dandelion
+Poppy
+Red Tulip
+Pink Tulip
+White Tulip
+Orange Tulip
+Daisy
+Bluebell
+Forget-me-not
+Allium
+Azure Bluet
+Lily of the Valley
+Shadow Rose
+Block of Diamond
+White Planks
+Orange Planks
+Magenta Planks
+Light Blue Planks
+Yellow Planks
+Lime Planks
+Pink Planks
+Gray Planks
+Light Gray Planks
+Cyan Planks
+Purple Planks
+Blue Planks
+Brown Planks
+Green Planks
+Red Planks
+Black Planks
+```
+remember, the environment has a watchdog timer. async and promises don't exist, and setTimeout and its cousins don't exist either. also, the world code init itself is very prone to getting interrupted, so run minimal code there. use sbr calls and sbr.ior and sbr.ior.levels for pretty much everything, as they are safe from interruptions. reprint the code for the library when providing the code for the request.
+
+your code should look something like this:
+```js
+[code for library]
+[declaration of a functions that uses sbr or sbr.ior, where sbr is generally used to large scale rects and sbr.ior is for fine grain control (like random texture)]
+[an array of arrays the these mini functions]
+[declaration of manager functions for sub-sections of the build calling ior on their respective set of mini functions once]
+[an array of the manger functions]
+[declaration of a single master function for each big section of the build calling ior on the array of manager functions]
+[a single sbr.ior.levels call on the master function]
+```
+because remember, the code you write cannot take more than about, 10ms, and functions cannot simply do multiple multiple-second tasks synchronously. however, you can always call sbr.ior on an array of callbacks, and it will execute them asynchronously, and the function will not be interrupted.
+
+Here are a few examples:
+
+Prompt: Make a megacity:
+Code:
+```js
+/*sbr by Ocelote, licensable under CC0*/(sbr=function(...e){e.length>0&&sbr.rawInputQueue.push(e)}).rawInputQueue=[],sbr.buildQueue=[],sbr.rateLimitCooldown=0,sbr.SPECIAL_BLOCK_IDS=new Set([204,205,206,207,952,953,954,955,1291,1292,1293,1294,1510,2088,2089,2090,2091]),sbr.MAX_RECT_VOLUME=360,sbr.TICK_BUDGET=250,sbr.COST_SCAN_BLOCK=.5,sbr.COST_SCAN_DATA=.7,sbr.COST_BUILD_RECT=10,sbr.COST_BUILD_DATA=1,sbr.COST_SPLIT_RECT=2,sbr.COST_CHUNK_CHECK=8,sbr.free=function(){return 0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length&&0===sbr.ior.free()},sbr.kill=function(){sbr.rawInputQueue=[],sbr.buildQueue=[],sbr.ior.kill()},sbr.getVol=function(e,t){let l=[t[0]-e[0]+1,t[1]-e[1]+1,t[2]-e[2]+1];return{dims:l,vol:l[0]*l[1]*l[2]}},sbr.deconstructWalls=function(e){let[t,l,u,n,$]=e,s=[],i=Math.min(t[0],l[0]),o=Math.min(t[1],l[1]),a=Math.min(t[2],l[2]),r=Math.max(t[0],l[0]),c=Math.max(t[1],l[1]),_=Math.max(t[2],l[2]);n&&s.push([[i,o,a],[r,o,_],u]),$&&s.push([[i,c,a],[r,c,_],u]),s.push([[i,o,a],[i,c,_],u]),s.push([[r,o,a],[r,c,_],u]);let C=n?o+1:o,d=$?c-1:c;return C<=d&&i+1<=r-1&&(s.push([[i+1,C,a],[r-1,d,a],u]),s.push([[i+1,C,_],[r-1,d,_],u])),s},sbr.checkAndLoadChunks=function(e,t){let l=[Math.min(e[0],t[0]),Math.min(e[1],t[1]),Math.min(e[2],t[2])],u=[Math.max(e[0],t[0]),Math.max(e[1],t[1]),Math.max(e[2],t[2])],n=!0;for(let $=l[0];$<=u[0];$+=32)for(let s=l[1];s<=u[1];s+=32)for(let i=l[2];i<=u[2];i+=32)api.isBlockInLoadedChunk($,s,i)||(api.getBlockId($,s,i),n=!1);return n},sbr.getTaskRange=function(e){return e?"gclone"===e[0]||"rect_with_data"===e[0]?[e[1],e[2]]:3===e.length&&Array.isArray(e[0])?[e[0],e[1]]:2===e.length&&Array.isArray(e[0])?[e[0],e[0]]:[e.slice(0,3),e.slice(0,3)]:[[0,0,0],[0,0,0]]},sbr.tick=function(){if(sbr.rateLimitCooldown>0){sbr.rateLimitCooldown--;return}if(0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length){sbr.ior.tick();return}let e=0;for(;sbr.rawInputQueue.length>0&&e<50;){e++;let t=sbr.rawInputQueue.shift();for(;1===t.length&&Array.isArray(t[0]);)t=t[0];t.length>0&&(!Array.isArray(t[0])||Array.isArray(t[0])&&!Array.isArray(t[0][0]))&&(t=[t]);for(let l=0;l<t.length;l++){let u=t[l];if(u&&Array.isArray(u)){if(5===u.length&&"boolean"==typeof u[3]){let n=sbr.deconstructWalls(u);t.splice(l,1,...n),l--}else 4===u.length&&u.every(e=>Array.isArray(e))?sbr.buildQueue.push(["gclone",...u,{scanPos:null,run:null}]):sbr.buildQueue.push(u)}}}let $=sbr.TICK_BUDGET,s=0;for(;$>0&&sbr.buildQueue.length>0&&s<1e3;){s++;let i=sbr.buildQueue[0],[o,a]=sbr.getTaskRange(i);if(!sbr.checkAndLoadChunks(o,a)){$-=sbr.COST_CHUNK_CHECK;for(let r=1;r<Math.min(sbr.buildQueue.length,15)&&$>=sbr.COST_CHUNK_CHECK;r++){let[c,_]=sbr.getTaskRange(sbr.buildQueue[r]);sbr.checkAndLoadChunks(c,_),$-=sbr.COST_CHUNK_CHECK}break}try{if("gclone"===i[0]){let[C,d,f,h,T,g]=i,k=[Math.min(d[0],f[0]),Math.min(d[1],f[1]),Math.min(d[2],f[2])],A=[Math.max(d[0],f[0]),Math.max(d[1],f[1]),Math.max(d[2],f[2])],m=[A[0]-k[0]+1,A[1]-k[1]+1,A[2]-k[2]+1],b=[h[0]-d[0],h[1]-d[1],h[2]-d[2]];null===g.scanPos&&(g.scanPos=[0,0,0],g.run={startPos:[0,0,0],blockType:api.getBlockId(k[0],k[1],k[2])});let p=!1;for(;$>=sbr.COST_SCAN_BLOCK;){$-=sbr.COST_SCAN_BLOCK;let[S,B,I]=g.scanPos,L=api.getBlockId(k[0]+S,k[1]+B,k[2]+I);if(L!==g.run.blockType||S===m[0]-1){let O=g.run.startPos,Q=L!==g.run.blockType?S-1:S,D=g.run.blockType;if(D&&0!==D){let y=[k[0]+O[0]+b[0],k[1]+B+b[1],k[2]+I+b[2]],P=[k[0]+Q+b[0],k[1]+B+b[1],k[2]+I+b[2]];if(sbr.SPECIAL_BLOCK_IDS.has(D)){let U=[];for(let E=O[0];E<=Q&&$>=sbr.COST_SCAN_DATA;E++)$-=sbr.COST_SCAN_DATA,U.push(api.getBlockData(k[0]+E,k[1]+B,k[2]+I));sbr.buildQueue.splice(1,0,["rect_with_data",y,P,String(D),U,0])}else sbr.buildQueue.splice(1,0,[y,P,String(D)])}g.run={startPos:[S,B,I],blockType:L}}if(g.scanPos[0]++,g.scanPos[0]>=m[0]&&(g.scanPos[0]=0,g.scanPos[1]++,g.scanPos[1]>=m[1]&&(g.scanPos[1]=0,g.scanPos[2]++),g.scanPos[2]<m[2]&&(g.run={startPos:[...g.scanPos],blockType:api.getBlockId(k[0],k[1]+g.scanPos[1],k[2]+g.scanPos[2])})),g.scanPos[2]>=m[2]){p=!0;break}}p&&sbr.buildQueue.shift()}else if("rect_with_data"===i[0]){let[w,K,x,R,N,H]=i;0===H&&(api.setBlockRect(K,x,R),$-=sbr.COST_BUILD_RECT);let v=H;for(;$>=sbr.COST_BUILD_DATA&&v<N.length;)$-=sbr.COST_BUILD_DATA,null!==N[v]&&api.setBlockData(K[0]+v,K[1],K[2],N[v]),v++;v>=N.length?sbr.buildQueue.shift():i[5]=v}else if(3===i.length&&Array.isArray(i[0])){let[M,V,G]=i,W=[Math.min(M[0],V[0]),Math.min(M[1],V[1]),Math.min(M[2],V[2])],X=[Math.max(M[0],V[0]),Math.max(M[1],V[1]),Math.max(M[2],V[2])],{dims:j,vol:q}=sbr.getVol(W,X);if(q>sbr.MAX_RECT_VOLUME){let z=j.indexOf(Math.max(...j)),F=W[z]+Math.floor(j[z]/2)-1,J=[...X];J[z]=F;let Y=[...W];Y[z]=F+1,sbr.buildQueue.splice(0,1,[W,J,G],[Y,X,G]),$-=sbr.COST_SPLIT_RECT}else api.setBlockRect(W,X,String(G)),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_RECT}else if(2===i.length&&Array.isArray(i[0]))api.setBlockData(i[0][0],i[0][1],i[0][2],i[1]),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_DATA;else if(4!==i.length||Array.isArray(i[0]))sbr.buildQueue.shift();else{let Z=i[3];"object"==typeof Z&&null!==Z?(api.setBlockData(i[0],i[1],i[2],Z),$-=sbr.COST_BUILD_DATA):(api.setBlock(i[0],i[1],i[2],String(Z)),$-=sbr.COST_BUILD_RECT/10),sbr.buildQueue.shift()}}catch(ee){let et=ee.message?ee.message.toLowerCase():"";if(et.includes("rate limit"))sbr.rateLimitCooldown=5;else if(et.includes("interrupted"))break;else api.log("sbr error: "+ee.message),sbr.buildQueue.shift()}}};{let e=(t,l,u,n)=>{("number"!=typeof n||isNaN(n))&&(n=1),("number"!=typeof l||isNaN(l))&&(l=0),("number"!=typeof u||isNaN(u))&&(u=l,l=0),n=Math.abs(n)*Math.sign(u-l),e.stack.push({cb:t,start:l,end:u,inc:n,count:0})};e.stack=[],e.tickBudget=100,e.defaultBudgetUsed=1,e.free=()=>!e.stack.length,e.kill=()=>void(e.stack=[]),e.tick=()=>{let t=e.tickBudget;for(;t>0&&e.stack.length>0;){let l=e.stack[e.stack.length-1],u=l.count*l.inc+l.start;(l.inc>0?u<l.end:u>l.end)?(t-=l.cb(u)??e.defaultBudgetUsed,l.count++):e.stack.pop()}},e.levels=(t,l)=>{let u=t;for(let n=0;n<l.length;n++){let $=u,[s,i,o]=l[l.length-1-n];u=t=>e(e=>$([...t,e]),s,i,o)}u([])},sbr.ior=e}
+
+// --- Megacity Setup Configuration ---
+const BASE_X = -54;
+const BASE_Y = 10;
+const BASE_Z = -54;
+const PLOT_SIZE = 30;
+const ROAD_WIDTH = 6;
+const CELL_SIZE = PLOT_SIZE + ROAD_WIDTH; // 36 blocks per cell
+
+// --- Declarations of mini-functions using sbr or sbr.ior ---
+// Mini-function to lay down road structures
+const mini_road = (x, z, width, length, isHorizontal) => {
+    // Road foundation
+    sbr([[x, BASE_Y, z], [x + width - 1, BASE_Y, z + length - 1], "Gray Concrete"]);
+    
+    // Central dividing lines
+    if (isHorizontal) {
+        let midZ = z + Math.floor(length / 2);
+        sbr([[x, BASE_Y, midZ], [x + width - 1, BASE_Y, midZ], "Yellow Concrete"]);
+    } else {
+        let midX = x + Math.floor(width / 2);
+        sbr([[midX, BASE_Y, z], [midX, BASE_Y, z + length - 1], "Yellow Concrete"]);
+    }
+};
+
+// Mini-function to build a horizontal slab for skyscraper floors
+const mini_floor_slab = (px, pz, size, y, material) => {
+    sbr([[px, y, pz], [px + size - 1, y, pz + size - 1], material]);
+};
+
+// Mini-function to lay down window and pillar facades
+const mini_floor_walls = (px, pz, size, y, wallBlock, glassBlock) => {
+    // Edge pillars (four corners)
+    sbr([[px, y, pz], [px, y, pz], "Smooth Stone"]);
+    sbr([[px + size - 1, y, pz], [px + size - 1, y, pz], "Smooth Stone"]);
+    sbr([[px, y, pz + size - 1], [px, y, pz + size - 1], "Smooth Stone"]);
+    sbr([[px + size - 1, y, pz + size - 1], [px + size - 1, y, pz + size - 1], "Smooth Stone"]);
+
+    // Glass facades between pillars
+    sbr([[px + 1, y, pz], [px + size - 2, y, pz], glassBlock]);
+    sbr([[px + 1, y, pz + size - 1], [px + size - 2, y, pz + size - 1], glassBlock]);
+    sbr([[px, y, pz + 1], [px, y, pz + size - 2], glassBlock]);
+    sbr([[px + size - 1, y, pz + 1], [px + size - 1, y, pz + size - 2], glassBlock]);
+};
+
+// Mini-function to build foliage/trees
+const mini_tree = (tx, tz, h, logType, leafType) => {
+    sbr([[tx, BASE_Y + 1, tz], [tx, BASE_Y + h, tz], logType]);
+    sbr([[tx - 2, BASE_Y + h, tz - 2], [tx + 2, BASE_Y + h + 2, tz + 2], leafType]);
+};
+
+// Mini-function to construct water ponds inside parks
+const mini_pond = (px, pz, size) => {
+    sbr([[px, BASE_Y, pz], [px + size - 1, BASE_Y, pz + size - 1], "Clay"]);
+    sbr([[px + 1, BASE_Y, pz + 1], [px + size - 2, BASE_Y, pz + size - 2], "Water"]);
+};
+
+// Mini-function to build sloped roofs on residential units
+const mini_house_roof = (px, pz, size, y, material) => {
+    for (let i = 0; i < Math.floor(size / 2) + 1; i++) {
+        sbr([[px + i, y + i, pz + i], [px + size - 1 - i, y + i, pz + size - 1 - i], material]);
+    }
+};
+
+// --- Array of arrays of these mini-functions ---
+const miniFuncGroups = [
+    [mini_road],
+    [mini_floor_slab, mini_floor_walls],
+    [mini_tree, mini_pond],
+    [mini_house_roof]
+];
+
+// --- Manager Functions for Subsections of the build ---
+// Sub-section 1: Roadway Manager
+const roadManager = (bx, bz) => {
+    let px = BASE_X + bx * CELL_SIZE;
+    let pz = BASE_Z + bz * CELL_SIZE;
+
+    // Lay road corridors
+    mini_road(px, pz + PLOT_SIZE, CELL_SIZE, ROAD_WIDTH, true);
+    mini_road(px + PLOT_SIZE, pz, ROAD_WIDTH, CELL_SIZE, false);
+    
+    // Road intersections
+    sbr([[px + PLOT_SIZE, BASE_Y, pz + PLOT_SIZE], [px + CELL_SIZE - 1, BASE_Y, pz + CELL_SIZE - 1], "Gray Concrete"]);
+
+    // Create streetlights using sbr.ior
+    sbr.ior((i) => {
+        let lx = px + i;
+        let lz = pz + PLOT_SIZE - 1;
+        sbr([[lx, BASE_Y + 1, lz], [lx, BASE_Y + 3, lz], "Smooth Stone"]);
+        sbr([[lx, BASE_Y + 4, lz], [lx, BASE_Y + 4, lz], "Dim Lamp On"]);
+    }, 4, CELL_SIZE, 8);
+};
+
+// Sub-section 2: Skyscraper Manager
+const skyscraperManager = (bx, bz, height, wallBlock, glassBlock) => {
+    let px = BASE_X + bx * CELL_SIZE + 2;
+    let pz = BASE_Z + bz * CELL_SIZE + 2;
+    let size = PLOT_SIZE - 4;
+
+    sbr.ior((y) => {
+        if (y % 4 === 0) {
+            // Horizontal floor slabs
+            mini_floor_slab(px, pz, size, BASE_Y + y, "Smooth Stone");
+            
+            // Central lighting source inside the rooms
+            let cx = px + Math.floor(size / 2);
+            let cz = pz + Math.floor(size / 2);
+            sbr([[cx, BASE_Y + y, cz], [cx, BASE_Y + y, cz], "Dim Lamp On"]);
+        } else {
+            // Pillars and transparent window facades
+            mini_floor_walls(px, pz, size, BASE_Y + y, wallBlock, glassBlock);
+        }
+    }, 1, height, 1);
+};
+
+// Sub-section 3: Urban Parks Manager
+const parkManager = (bx, bz) => {
+    let px = BASE_X + bx * CELL_SIZE;
+    let pz = BASE_Z + bz * CELL_SIZE;
+
+    // Lay down lawns
+    sbr([[px, BASE_Y, pz], [px + PLOT_SIZE - 1, BASE_Y, pz + PLOT_SIZE - 1], "Grass Block"]);
+
+    // Water feature
+    mini_pond(px + 4, pz + 4, 8);
+
+    // Populate greenery incrementally using sbr.ior
+    sbr.ior((i) => {
+        let tx = px + 15 + (i % 3) * 4;
+        let tz = pz + 15 + Math.floor(i / 3) * 4;
+        mini_tree(tx, tz, 5, "Maple Log", "Maple Leaves");
+    }, 0, 9, 1);
+};
+
+// Sub-section 4: Low-density Residential Manager
+const residentialManager = (bx, bz) => {
+    let px = BASE_X + bx * CELL_SIZE + 2;
+    let pz = BASE_Z + bz * CELL_SIZE + 2;
+
+    // Establish green fields
+    sbr([[px, BASE_Y, pz], [px + PLOT_SIZE - 5, BASE_Y, pz + PLOT_SIZE - 5], "Grass Block"]);
+
+    // Build independent houses using sbr.ior
+    sbr.ior((hIdx) => {
+        let hx = px + (hIdx * 12);
+        let hz = pz + 2;
+        let size = 8;
+        let height = 5;
+
+        // Brick perimeter
+        sbr([[hx, BASE_Y + 1, hz], [hx + size - 1, BASE_Y + height, hz + size - 1], "Bricks"]);
+        // Hollow interiors
+        sbr([[hx + 1, BASE_Y + 1, hz + 1], [hx + size - 2, BASE_Y + height, hz + size - 2], "Air"]);
+        // Roof structures
+        mini_house_roof(hx, hz, size, BASE_Y + height + 1, "Dark Red Brick");
+        
+        // Doorways and window inserts
+        sbr([[hx + 3, BASE_Y + 1, hz], [hx + 4, BASE_Y + 2, hz], "Air"]);
+        sbr([[hx + 1, BASE_Y + 2, hz], [hx + 1, BASE_Y + 2, hz], "Glass"]);
+    }, 0, 2, 1);
+};
+
+// --- Array of Sub-section Managers ---
+const managers = [
+    roadManager,
+    skyscraperManager,
+    parkManager,
+    residentialManager
+];
+
+// --- Master Function coordinating the city layout ---
+const masterBuilder = (gx, gz) => {
+    let px = BASE_X + gx * CELL_SIZE;
+    let pz = BASE_Z + gz * CELL_SIZE;
+
+    sbr.ior((stage) => {
+        if (stage === 0) {
+            // Clearing step: remove ground structures and level building zone
+            sbr([[px, BASE_Y + 1, pz], [px + CELL_SIZE - 1, BASE_Y + 50, pz + CELL_SIZE - 1], "Air"]);
+            sbr([[px, BASE_Y, pz], [px + CELL_SIZE - 1, BASE_Y, pz + CELL_SIZE - 1], "Dirt"]);
+        } else if (stage === 1) {
+            // Road placement
+            managers[0](gx, gz);
+        } else if (stage === 2) {
+            // Structure assignments depending on grid patterns
+            let plotType = (gx + gz) % 3;
+            if (plotType === 0) {
+                let h = 20 + (gx * 10) + (gz * 5);
+                let wallBlock = gx % 2 === 0 ? "White Concrete" : "Black Concrete";
+                let glassBlock = gz % 2 === 0 ? "Blue Glass" : "Cyan Glass";
+                managers[1](gx, gz, h, wallBlock, glassBlock);
+            } else if (plotType === 1) {
+                managers[2](gx, gz);
+            } else {
+                managers[3](gx, gz);
+            }
+        }
+    }, 0, 3, 1);
+};
+
+// --- Single levels call triggering the master build sequences ---
+// Generates a 3x3 block metropolitan grid safely
+sbr.ior.levels((coords) => {
+    masterBuilder(coords[0], coords[1]);
+}, [
+    [0, 3, 1], // X grid index (0, 1, 2)
+    [0, 3, 1]  // Z grid index (0, 1, 2)
+]);
+
+// --- Main Hook Loop Execution ---
+tick = () => {
+    sbr.tick();
+};
+```
+
+another example:
+
+Prompt: "make a fantasy castle"
+Code:
+```js
+/*sbr by Ocelote, licensable under CC0*/(sbr=function(...e){e.length>0&&sbr.rawInputQueue.push(e)}).rawInputQueue=[],sbr.buildQueue=[],sbr.rateLimitCooldown=0,sbr.SPECIAL_BLOCK_IDS=new Set([204,205,206,207,952,953,954,955,1291,1292,1293,1294,1510,2088,2089,2090,2091]),sbr.MAX_RECT_VOLUME=360,sbr.TICK_BUDGET=250,sbr.COST_SCAN_BLOCK=.5,sbr.COST_SCAN_DATA=.7,sbr.COST_BUILD_RECT=10,sbr.COST_BUILD_DATA=1,sbr.COST_SPLIT_RECT=2,sbr.COST_CHUNK_CHECK=8,sbr.free=function(){return 0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length&&0===sbr.ior.free()},sbr.kill=function(){sbr.rawInputQueue=[],sbr.buildQueue=[],sbr.ior.kill()},sbr.getVol=function(e,t){let l=[t[0]-e[0]+1,t[1]-e[1]+1,t[2]-e[2]+1];return{dims:l,vol:l[0]*l[1]*l[2]}},sbr.deconstructWalls=function(e){let[t,l,u,n,$]=e,s=[],i=Math.min(t[0],l[0]),o=Math.min(t[1],l[1]),a=Math.min(t[2],l[2]),r=Math.max(t[0],l[0]),c=Math.max(t[1],l[1]),_=Math.max(t[2],l[2]);n&&s.push([[i,o,a],[r,o,_],u]),$&&s.push([[i,c,a],[r,c,_],u]),s.push([[i,o,a],[i,c,_],u]),s.push([[r,o,a],[r,c,_],u]);let C=n?o+1:o,d=$?c-1:c;return C<=d&&i+1<=r-1&&(s.push([[i+1,C,a],[r-1,d,a],u]),s.push([[i+1,C,_],[r-1,d,_],u])),s},sbr.checkAndLoadChunks=function(e,t){let l=[Math.min(e[0],t[0]),Math.min(e[1],t[1]),Math.min(e[2],t[2])],u=[Math.max(e[0],t[0]),Math.max(e[1],t[1]),Math.max(e[2],t[2])],n=!0;for(let $=l[0];$<=u[0];$+=32)for(let s=l[1];s<=u[1];s+=32)for(let i=l[2];i<=u[2];i+=32)api.isBlockInLoadedChunk($,s,i)||(api.getBlockId($,s,i),n=!1);return n},sbr.getTaskRange=function(e){return e?"gclone"===e[0]||"rect_with_data"===e[0]?[e[1],e[2]]:3===e.length&&Array.isArray(e[0])?[e[0],e[1]]:2===e.length&&Array.isArray(e[0])?[e[0],e[0]]:[e.slice(0,3),e.slice(0,3)]:[[0,0,0],[0,0,0]]},sbr.tick=function(){if(sbr.rateLimitCooldown>0){sbr.rateLimitCooldown--;return}if(0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length){sbr.ior.tick();return}let e=0;for(;sbr.rawInputQueue.length>0&&e<50;){e++;let t=sbr.rawInputQueue.shift();for(;1===t.length&&Array.isArray(t[0]);)t=t[0];t.length>0&&(!Array.isArray(t[0])||Array.isArray(t[0])&&!Array.isArray(t[0][0]))&&(t=[t]);for(let l=0;l<t.length;l++){let u=t[l];if(u&&Array.isArray(u)){if(5===u.length&&"boolean"==typeof u[3]){let n=sbr.deconstructWalls(u);t.splice(l,1,...n),l--}else 4===u.length&&u.every(e=>Array.isArray(e))?sbr.buildQueue.push(["gclone",...u,{scanPos:null,run:null}]):sbr.buildQueue.push(u)}}}let $=sbr.TICK_BUDGET,s=0;for(;$>0&&sbr.buildQueue.length>0&&s<1e3;){s++;let i=sbr.buildQueue[0],[o,a]=sbr.getTaskRange(i);if(!sbr.checkAndLoadChunks(o,a)){$-=sbr.COST_CHUNK_CHECK;for(let r=1;r<Math.min(sbr.buildQueue.length,15)&&$>=sbr.COST_CHUNK_CHECK;r++){let[c,_]=sbr.getTaskRange(sbr.buildQueue[r]);sbr.checkAndLoadChunks(c,_),$-=sbr.COST_CHUNK_CHECK}break}try{if("gclone"===i[0]){let[C,d,f,h,T,g]=i,k=[Math.min(d[0],f[0]),Math.min(d[1],f[1]),Math.min(d[2],f[2])],A=[Math.max(d[0],f[0]),Math.max(d[1],f[1]),Math.max(d[2],f[2])],m=[A[0]-k[0]+1,A[1]-k[1]+1,A[2]-k[2]+1],b=[h[0]-d[0],h[1]-d[1],h[2]-d[2]];null===g.scanPos&&(g.scanPos=[0,0,0],g.run={startPos:[0,0,0],blockType:api.getBlockId(k[0],k[1],k[2])});let p=!1;for(;$>=sbr.COST_SCAN_BLOCK;){$-=sbr.COST_SCAN_BLOCK;let[S,B,I]=g.scanPos,L=api.getBlockId(k[0]+S,k[1]+B,k[2]+I);if(L!==g.run.blockType||S===m[0]-1){let O=g.run.startPos,Q=L!==g.run.blockType?S-1:S,D=g.run.blockType;if(D&&0!==D){let y=[k[0]+O[0]+b[0],k[1]+B+b[1],k[2]+I+b[2]],P=[k[0]+Q+b[0],k[1]+B+b[1],k[2]+I+b[2]];if(sbr.SPECIAL_BLOCK_IDS.has(D)){let U=[];for(let E=O[0];E<=Q&&$>=sbr.COST_SCAN_DATA;E++)$-=sbr.COST_SCAN_DATA,U.push(api.getBlockData(k[0]+E,k[1]+B,k[2]+I));sbr.buildQueue.splice(1,0,["rect_with_data",y,P,String(D),U,0])}else sbr.buildQueue.splice(1,0,[y,P,String(D)])}g.run={startPos:[S,B,I],blockType:L}}if(g.scanPos[0]++,g.scanPos[0]>=m[0]&&(g.scanPos[0]=0,g.scanPos[1]++,g.scanPos[1]>=m[1]&&(g.scanPos[1]=0,g.scanPos[2]++),g.scanPos[2]<m[2]&&(g.run={startPos:[...g.scanPos],blockType:api.getBlockId(k[0],k[1]+g.scanPos[1],k[2]+g.scanPos[2])})),g.scanPos[2]>=m[2]){p=!0;break}}p&&sbr.buildQueue.shift()}else if("rect_with_data"===i[0]){let[w,K,x,R,N,H]=i;0===H&&(api.setBlockRect(K,x,R),$-=sbr.COST_BUILD_RECT);let v=H;for(;$>=sbr.COST_BUILD_DATA&&v<N.length;)$-=sbr.COST_BUILD_DATA,null!==N[v]&&api.setBlockData(K[0]+v,K[1],K[2],N[v]),v++;v>=N.length?sbr.buildQueue.shift():i[5]=v}else if(3===i.length&&Array.isArray(i[0])){let[M,V,G]=i,W=[Math.min(M[0],V[0]),Math.min(M[1],V[1]),Math.min(M[2],V[2])],X=[Math.max(M[0],V[0]),Math.max(M[1],V[1]),Math.max(M[2],V[2])],{dims:j,vol:q}=sbr.getVol(W,X);if(q>sbr.MAX_RECT_VOLUME){let z=j.indexOf(Math.max(...j)),F=W[z]+Math.floor(j[z]/2)-1,J=[...X];J[z]=F;let Y=[...W];Y[z]=F+1,sbr.buildQueue.splice(0,1,[W,J,G],[Y,X,G]),$-=sbr.COST_SPLIT_RECT}else api.setBlockRect(W,X,String(G)),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_RECT}else if(2===i.length&&Array.isArray(i[0]))api.setBlockData(i[0][0],i[0][1],i[0][2],i[1]),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_DATA;else if(4!==i.length||Array.isArray(i[0]))sbr.buildQueue.shift();else{let Z=i[3];"object"==typeof Z&&null!==Z?(api.setBlockData(i[0],i[1],i[2],Z),$-=sbr.COST_BUILD_DATA):(api.setBlock(i[0],i[1],i[2],String(Z)),$-=sbr.COST_BUILD_RECT/10),sbr.buildQueue.shift()}}catch(ee){let et=ee.message?ee.message.toLowerCase():"";if(et.includes("rate limit"))sbr.rateLimitCooldown=5;else if(et.includes("interrupted"))break;else api.log("sbr error: "+ee.message),sbr.buildQueue.shift()}}};{let e=(t,l,u,n)=>{("number"!=typeof n||isNaN(n))&&(n=1),("number"!=typeof l||isNaN(l))&&(l=0),("number"!=typeof u||isNaN(u))&&(u=l,l=0),n=Math.abs(n)*Math.sign(u-l),e.stack.push({cb:t,start:l,end:u,inc:n,count:0})};e.stack=[],e.tickBudget=100,e.defaultBudgetUsed=1,e.free=()=>!e.stack.length,e.kill=()=>void(e.stack=[]),e.tick=()=>{let t=e.tickBudget;for(;t>0&&e.stack.length>0;){let l=e.stack[e.stack.length-1],u=l.count*l.inc+l.start;(l.inc>0?u<l.end:u>l.end)?(t-=l.cb(u)??e.defaultBudgetUsed,l.count++):e.stack.pop()}},e.levels=(t,l)=>{let u=t;for(let n=0;n<l.length;n++){let $=u,[s,i,o]=l[l.length-1-n];u=t=>e(e=>$([...t,e]),s,i,o)}u([])},sbr.ior=e}
+
+// --- BUILD UTILITIES & OFFSET CONFIGURATION ---
+const OX = 0;   // Origin X of the Castle
+const OY = 10;  // Origin Y of the Castle (ground level height)
+const OZ = 0;   // Origin Z of the Castle
+
+// Random selection of stone block types to create a texturized, weathered aesthetic
+const CASTLE_STONES = ["Stone Bricks", "Mossy Stone Bricks", "Cracked Stone Bricks", "Stone"];
+function getRandomStone() {
+    return CASTLE_STONES[Math.floor(Math.random() * CASTLE_STONES.length)];
+}
+
+// Custom tower generator
+function buildTowerAt(cx, cz) {
+    sbr.ior.levels(coords => {
+        let [dx, dz, y] = coords;
+        let distSq = dx * dx + dz * dz;
+        // Outer stone wall layer
+        if (distSq >= 9 && distSq <= 17) {
+            api.setBlock(OX + cx + dx, OY + y, OZ + cz + dz, getRandomStone());
+        } else if (distSq < 9 && y % 5 === 0) {
+            // Wood floor partitions inside the tower
+            api.setBlock(OX + cx + dx, OY + y, OZ + cz + dz, "Pine Wood Planks");
+        }
+    }, [[-4, 5, 1], [-4, 5, 1], [0, 21, 1]]);
+}
+
+// Conical roof spire generator with a golden decorative tip
+function buildTowerRoofAt(cx, cz) {
+    sbr.ior.levels(coords => {
+        let [dx, dz, h] = coords;
+        let r = 4.2 - (h * 0.55);
+        let rInner = r - 1.1;
+        let distSq = dx * dx + dz * dz;
+        if (distSq <= r * r && distSq >= rInner * rInner) {
+            api.setBlock(OX + cx + dx, OY + 20 + h, OZ + cz + dz, "Blue Planks");
+        }
+        if (h === 7 && dx === 0 && dz === 0) {
+            api.setBlock(OX + cx, OY + 20 + 8, OZ + cz, "Block of Gold");
+            api.setBlock(OX + cx, OY + 20 + 9, OZ + cz, "Golden Decoration");
+        }
+    }, [[-4, 5, 1], [-4, 5, 1], [0, 8, 1]]);
+}
+
+// Organic fantasy canopy generator 
+function buildTreeAt(tx, tz, trunkType, leafType) {
+    for (let y = 0; y < 5; y++) {
+        api.setBlock(OX + tx, OY + y, OZ + tz, trunkType);
+    }
+    sbr.ior.levels(coords => {
+        let [dx, dz, dy] = coords;
+        let distSq = dx * dx + dz * dz + dy * dy;
+        if (distSq <= 9) {
+            if (dx === 0 && dz === 0 && dy < 0) return;
+            // Introduce golden sparkles inside the fantasy leaves
+            if (Math.random() < 0.12 && leafType === "Maple Leaves") {
+                api.setBlock(OX + tx + dx, OY + 4 + dy, OZ + tz + dz, "Block of Gold");
+            } else {
+                api.setBlock(OX + tx + dx, OY + 4 + dy, OZ + tz + dz, leafType);
+            }
+        }
+    }, [[-3, 4, 1], [-3, 4, 1], [-2, 4, 1]]);
+}
+
+
+// --- 1. DECLARATION OF MINI FUNCTIONS ---
+
+// --- Group 1: Groundwork & Foundations ---
+function fn_clearSpace() {
+    // Clear area for the castle and courtyard
+    sbr([OX - 35, OY, OZ - 35], [OX + 35, OY + 45, OZ + 35], "Air");
+}
+
+function fn_buildGround() {
+    // Lay down grass yard and smooth stone foundation base
+    sbr([OX - 35, OY - 1, OZ - 35], [OX + 35, OY - 1, OZ + 35], "Grass Block");
+    sbr([OX - 30, OY, OZ - 30], [OX + 30, OY, OZ + 30], "Smooth Stone");
+}
+
+// --- Group 2: Outer Walls ---
+function fn_outerWallNorth() {
+    sbr.ior.levels(coords => {
+        let [x, y] = coords;
+        api.setBlock(OX + x, OY + y, OZ - 25, getRandomStone());
+    }, [[-25, 26, 1], [0, 10, 1]]);
+}
+
+function fn_outerWallSouth() {
+    sbr.ior.levels(coords => {
+        let [x, y] = coords;
+        // Skip gatehouse entrance
+        if (Math.abs(x) <= 4 && y < 6) return;
+        api.setBlock(OX + x, OY + y, OZ + 25, getRandomStone());
+    }, [[-25, 26, 1], [0, 10, 1]]);
+}
+
+function fn_outerWallEast() {
+    sbr.ior.levels(coords => {
+        let [z, y] = coords;
+        api.setBlock(OX + 25, OY + y, OZ + z, getRandomStone());
+    }, [[-25, 26, 1], [0, 10, 1]]);
+}
+
+function fn_outerWallWest() {
+    sbr.ior.levels(coords => {
+        let [z, y] = coords;
+        api.setBlock(OX - 25, OY + y, OZ + z, getRandomStone());
+    }, [[-25, 26, 1], [0, 10, 1]]);
+}
+
+function fn_wallBattlements() {
+    sbr.ior(i => {
+        let offset = -25 + i;
+        if (offset % 2 === 0) {
+            api.setBlock(OX + offset, OY + 10, OZ - 25, getRandomStone());
+            if (Math.abs(offset) > 4) {
+                api.setBlock(OX + offset, OY + 10, OZ + 25, getRandomStone());
+            }
+            api.setBlock(OX - 25, OY + 10, OZ + offset, getRandomStone());
+            api.setBlock(OX + 25, OY + 10, OZ + offset, getRandomStone());
+        }
+    }, 0, 51);
+}
+
+// --- Group 3: Corner Towers ---
+function fn_towerNW() { buildTowerAt(-25, -25); }
+function fn_towerNE() { buildTowerAt(25, -25); }
+function fn_towerSW() { buildTowerAt(-25, 25); }
+function fn_towerSE() { buildTowerAt(25, 25); }
+
+function fn_towerRoofNW() { buildTowerRoofAt(-25, -25); }
+function fn_towerRoofNE() { buildTowerRoofAt(25, -25); }
+function fn_towerRoofSW() { buildTowerRoofAt(-25, 25); }
+function fn_towerRoofSE() { buildTowerRoofAt(25, 25); }
+
+// --- Group 4: Keep Structure ---
+function fn_keepTier1() {
+    sbr.ior.levels(coords => {
+        let [x, z, y] = coords;
+        let isWall = (x === -12 || x === 12 || z === -12 || z === 12);
+        if (isWall) {
+            // Keep entrance
+            if (z === 12 && Math.abs(x) <= 2 && y < 5) return;
+            // Generate glowing blue-glass windows
+            if (y % 5 === 2 && x % 4 === 0 && x !== -12 && x !== 12) {
+                api.setBlock(OX + x, OY + y, OZ + z, "Light Blue Glass");
+            } else {
+                api.setBlock(OX + x, OY + y, OZ + z, getRandomStone());
+            }
+        }
+        if (!isWall && (y === 0 || y === 8)) {
+            api.setBlock(OX + x, OY + y, OZ + z, "Smooth Stone");
+        }
+    }, [[-12, 13, 1], [-12, 13, 1], [0, 16, 1]]);
+}
+
+function fn_keepTier2() {
+    sbr.ior.levels(coords => {
+        let [x, z, y] = coords;
+        let isWall = (x === -8 || x === 8 || z === -8 || z === 8);
+        if (isWall) {
+            if (y % 4 === 2 && (x % 3 === 0 || z % 3 === 0)) {
+                api.setBlock(OX + x, OY + y, OZ + z, "Light Blue Glass");
+            } else {
+                api.setBlock(OX + x, OY + y, OZ + z, getRandomStone());
+            }
+        }
+        if (!isWall && (y === 15 || y === 22)) {
+            api.setBlock(OX + x, OY + y, OZ + z, "Pine Wood Planks");
+        }
+    }, [[-8, 9, 1], [-8, 9, 1], [15, 29, 1]]);
+}
+
+function fn_keepCentralSpire() {
+    sbr.ior.levels(coords => {
+        let [x, z, y] = coords;
+        let isWall = (x === -3 || x === 3 || z === -3 || z === 3);
+        if (isWall) {
+            api.setBlock(OX + x, OY + y, OZ + z, "Smooth Diorite");
+        }
+    }, [[-3, 4, 1], [-3, 4, 1], [28, 41, 1]]);
+}
+
+function fn_keepCentralSpireRoof() {
+    sbr.ior.levels(coords => {
+        let [dx, dz, h] = coords;
+        let r = 3.2 - (h * 0.4);
+        let rInner = r - 1.1;
+        let distSq = dx * dx + dz * dz;
+        if (distSq <= r * r && distSq >= rInner * rInner) {
+            api.setBlock(OX + dx, OY + 41 + h, OZ + dz, "Blue Concrete");
+        }
+        if (h === 8 && dx === 0 && dz === 0) {
+            api.setBlock(OX, OY + 50, OZ, "Block of Gold");
+            api.setBlock(OX, OY + 51, OZ, "Beacon");
+        }
+    }, [[-3, 4, 1], [-3, 4, 1], [0, 9, 1]]);
+}
+
+// --- Group 5: Gatehouse & Courtyard Details ---
+function fn_gatehouseTowers() {
+    sbr.ior.levels(coords => {
+        let [dx, dz, y] = coords;
+        let distSqLeft = (dx + 5) * (dx + 5) + (dz - 25) * (dz - 25);
+        let distSqRight = (dx - 5) * (dx - 5) + (dz - 25) * (dz - 25);
+        if ((distSqLeft >= 4 && distSqLeft <= 9) || (distSqRight >= 4 && distSqRight <= 9)) {
+            api.setBlock(OX + dx, OY + y, OZ + dz, getRandomStone());
+        }
+    }, [[-8, 9, 1], [22, 28, 1], [0, 14, 1]]);
+}
+
+function fn_gatehouseBridgeAndDoor() {
+    // Drawbridge
+    sbr([OX - 3, OY, OZ + 26], [OX + 3, OY, OZ + 32], "Pine Wood Planks");
+    api.setBlock(OX - 3, OY + 1, OZ + 31, "Pine Log");
+    api.setBlock(OX + 3, OY + 1, OZ + 31, "Pine Log");
+    api.setBlock(OX - 3, OY + 2, OZ + 30, "Pine Log");
+    api.setBlock(OX + 3, OY + 2, OZ + 30, "Pine Log");
+    api.setBlock(OX - 3, OY + 3, OZ + 29, "Pine Log");
+    api.setBlock(OX + 3, OY + 3, OZ + 29, "Pine Log");
+    api.setBlock(OX - 3, OY + 4, OZ + 28, "Pine Log");
+    api.setBlock(OX + 3, OY + 4, OZ + 28, "Pine Log");
+    api.setBlock(OX - 3, OY + 5, OZ + 27, "Pine Log");
+    api.setBlock(OX + 3, OY + 5, OZ + 27, "Pine Log");
+
+    // Iron Portcullis Grate
+    sbr.ior.levels(coords => {
+        let [x, y] = coords;
+        if (x % 2 === 0) {
+            api.setBlock(OX + x, OY + y, OZ + 25, "Block of Iron");
+        } else if (y === 5) {
+            api.setBlock(OX + x, OY + y, OZ + 25, "Block of Iron");
+        }
+    }, [[-3, 4, 1], [0, 6, 1]]);
+}
+
+function fn_courtyardFountain() {
+    sbr.ior.levels(coords => {
+        let [dx, dz] = coords;
+        let distSq = dx * dx + dz * dz;
+        if (distSq >= 4 && distSq <= 9) {
+            api.setBlock(OX + dx, OY, OZ + 18 + dz, "Smooth Stone");
+        } else if (distSq < 4) {
+            api.setBlock(OX + dx, OY, OZ + 18 + dz, "Water");
+        }
+    }, [[-3, 4, 1], [-3, 4, 1]]);
+    api.setBlock(OX, OY + 1, OZ + 18, "Smooth Stone");
+    api.setBlock(OX, OY + 2, OZ + 18, "Water");
+}
+
+function fn_courtyardGarden() {
+    sbr.ior.levels(coords => {
+        let [x, z] = coords;
+        let isLeftGarden = (x >= -23 && x <= -18);
+        let isRightGarden = (x >= 18 && x <= 23);
+        let isZRange = (z >= -20 && z <= 20);
+        if ((isLeftGarden || isRightGarden) && isZRange) {
+            api.setBlock(OX + x, OY - 1, OZ + z, "Grass Block");
+            let rand = Math.random();
+            if (rand < 0.15) {
+                api.setBlock(OX + x, OY, OZ + z, "Shadow Rose");
+            } else if (rand < 0.3) {
+                api.setBlock(OX + x, OY, OZ + z, "Bluebell");
+            } else if (rand < 0.45) {
+                api.setBlock(OX + x, OY, OZ + z, "Forget-me-not");
+            } else if (rand < 0.6) {
+                api.setBlock(OX + x, OY, OZ + z, "Allium");
+            } else if (rand < 0.7) {
+                api.setBlock(OX + x, OY, OZ + z, "Lily of the Valley");
+            } else if (rand < 0.85) {
+                api.setBlock(OX + x, OY, OZ + z, "Grass");
+            }
+        }
+    }, [[-23, 24, 1], [-20, 21, 1]]);
+}
+
+function fn_courtyardTrees() {
+    buildTreeAt(-15, -18, "Maple Log", "Maple Leaves");
+    buildTreeAt(15, -18, "Pine Log", "Pine Leaves");
+}
+
+
+// --- 2. ARRAY OF ARRAYS OF MINI FUNCTIONS ---
+const mini_foundation = [fn_clearSpace, fn_buildGround];
+const mini_walls = [fn_outerWallNorth, fn_outerWallSouth, fn_outerWallEast, fn_outerWallWest, fn_wallBattlements];
+const mini_towers = [fn_towerNW, fn_towerNE, fn_towerSW, fn_towerSE, fn_towerRoofNW, fn_towerRoofNE, fn_towerRoofSW, fn_towerRoofSE];
+const mini_keep = [fn_keepTier1, fn_keepTier2, fn_keepCentralSpire, fn_keepCentralSpireRoof];
+const mini_details = [fn_gatehouseTowers, fn_gatehouseBridgeAndDoor, fn_courtyardFountain, fn_courtyardGarden, fn_courtyardTrees];
+
+const MINI_FUNCTIONS_GROUPS = [
+    mini_foundation,
+    mini_walls,
+    mini_towers,
+    mini_keep,
+    mini_details
+];
+
+
+// --- 3. DECLARATION OF SUB-SECTION MANAGER FUNCTIONS ---
+function mgr_foundation() {
+    sbr.ior(i => mini_foundation[i](), 0, mini_foundation.length);
+}
+
+function mgr_walls() {
+    sbr.ior(i => mini_walls[i](), 0, mini_walls.length);
+}
+
+function mgr_towers() {
+    sbr.ior(i => mini_towers[i](), 0, mini_towers.length);
+}
+
+function mgr_keep() {
+    sbr.ior(i => mini_keep[i](), 0, mini_keep.length);
+}
+
+function mgr_details() {
+    sbr.ior(i => mini_details[i](), 0, mini_details.length);
+}
+
+
+// --- 4. ARRAY OF MANAGER FUNCTIONS ---
+const MANAGER_FUNCTIONS = [
+    mgr_foundation,
+    mgr_walls,
+    mgr_towers,
+    mgr_keep,
+    mgr_details
+];
+
+
+// --- 5. DECLARATION OF SINGLE MASTER FUNCTION ---
+function master_buildCastle(coords) {
+    let idx = coords[0];
+    MANAGER_FUNCTIONS[idx]();
+}
+
+
+// --- 6. SINGLE SBR.IOR.LEVELS CALL TO EXECUTE ---
+sbr.ior.levels(master_buildCastle, [[0, MANAGER_FUNCTIONS.length, 1]]);
+
+
+// --- 7. EXECUTOR HOOK ---
+tick = () => {
+    sbr.tick();
+};
+```
+
+
+Now, your task is to:
+
+[insert prompt here (e.g. "make a futuristic village")]
