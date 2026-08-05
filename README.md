@@ -9,4 +9,6 @@ Here's the prompt, use it preferably with gemini 3.5 flash (or up) (google ai st
 
 Edit the bottom line to whatever prompt you want to give it.
 
+Then it should eventually give you a code, then go to a flat world and paste it in world code, and there you go, your build is ready.
+
 Note: you do not have to credit me for any of this.
