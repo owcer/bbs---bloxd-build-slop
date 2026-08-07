@@ -8,12 +8,21 @@ sbr.tick()
 }
 ```
 consider this library.
-Here is a block pallette you can use (don't use anything outside that may not even exist):
+Here is a block pallette you can use (DO NOT use anything out of this, for example Oak, Fence, Chain, they DO NOT exist, so only use blocks from this list to be safe):
 ```
+(things in parentheses are comments)
+(these are the most used blocks:)
 Air
 Dirt
 Messy Dirt
+(the normal grass blocks have a grass texture only on the top)
 Grass Block
+Pine Grass Block
+Jungle Grass Block
+(the overgrown grass blocks have a grass texture all around)
+Overgrown Grass Block
+Overgrown Pine Grass Block
+Overgrown Jungle Grass Block
 Sand
 Clay
 Gravel
@@ -148,7 +157,6 @@ Obsidian
 Hay Bale
 Sponge
 Beacon
-temp
 Golden Decoration
 Moonstone Explosive
 Bedrock
@@ -185,6 +193,106 @@ Brown Planks
 Green Planks
 Red Planks
 Black Planks
+Lava
+Moonstone Ore
+Block of Moonstone
+Magma
+(these blocks are less used:)
+Useless Soil
+Red Sandstone
+Marked Sandstone
+Smooth Red Sandstone
+Engraved Red Sandstone
+Marked Red Sandstone
+Green Stone
+Green Bricks
+Dark Green Bricks
+Sandstone Bricks
+Engraved Diorite
+Diorite Bricks
+Engraved Andesite
+Andesite Bricks
+Engraved Granite
+Granite Bricks
+Ice Bricks
+Net
+Cobweb
+Brown Mushroom Block
+Red Mushroom Block
+Pumpkin
+Watermelon
+Iron Watermelon
+Patterned Black Glass
+Patterned Blue Glass
+Patterned Brown Glass
+Patterned Cyan Glass
+Patterned Gray Glass
+Patterned Light Gray Glass
+Patterned Green Glass
+Patterned Light Blue Glass
+Patterned Lime Glass
+Patterned Magenta Glass
+Patterned Orange Glass
+Patterned Pink Glass
+Patterned Purple Glass
+Patterned Red Glass
+Patterned White Glass
+Patterned Yellow Glass
+(Chalks are pale variants of Concretes)
+Chalk
+Yellow Chalk
+White Chalk
+Red Chalk
+Purple Chalk
+Pink Chalk
+Orange Chalk
+Magenta Chalk
+Lime Chalk
+Light Gray Chalk
+Light Blue Chalk
+Green Chalk
+Gray Chalk
+Cyan Chalk
+Brown Chalk
+Blue Chalk
+Black Chalk
+Yellow Chalk Bricks
+White Chalk Bricks
+Red Chalk Bricks
+Purple Chalk Bricks
+Pink Chalk Bricks
+Orange Chalk Bricks
+Magenta Chalk Bricks
+Lime Chalk Bricks
+Light Gray Chalk Bricks
+Light Blue Chalk Bricks
+Green Chalk Bricks
+Gray Chalk Bricks
+Cyan Chalk Bricks
+Brown Chalk Bricks
+Blue Chalk Bricks
+Black Chalk Bricks
+(ropes and vines can be stacked vertically to make them climbable)
+Dangling Rope
+Dangling Vine
+Crate
+(Neons are glowing variants of Wools)
+Yellow Neon
+White Neon
+Red Neon
+Purple Neon
+Pink Neon
+Orange Neon
+Magenta Neon
+Lime Neon
+Light Gray Neon
+Light Blue Neon
+Green Neon
+Gray Neon
+Cyan Neon
+Brown Neon
+Blue Neon
+Black Neon
 ```
 remember, the environment has a watchdog timer. async and promises don't exist, and setTimeout and its cousins don't exist either. also, the world code init itself is very prone to getting interrupted, so run minimal code there. use sbr calls and sbr.ior and sbr.ior.levels for pretty much everything, as they are safe from interruptions. reprint the code for the library when providing the code for the request.
 
@@ -774,8 +882,559 @@ tick = () => {
     sbr.tick();
 };
 ```
+another example:
 
+Prompt: "make a sacred moonstone temple"
+Code:
+```js
+/*sbr by Ocelote, licensable under CC0*/(sbr=function(...e){e.length>0&&sbr.rawInputQueue.push(e)}).rawInputQueue=[],sbr.buildQueue=[],sbr.rateLimitCooldown=0,sbr.SPECIAL_BLOCK_IDS=new Set([204,205,206,207,952,953,954,955,1291,1292,1293,1294,1510,2088,2089,2090,2091]),sbr.MAX_RECT_VOLUME=360,sbr.TICK_BUDGET=250,sbr.COST_SCAN_BLOCK=.5,sbr.COST_SCAN_DATA=.7,sbr.COST_BUILD_RECT=10,sbr.COST_BUILD_DATA=1,sbr.COST_SPLIT_RECT=2,sbr.COST_CHUNK_CHECK=8,sbr.free=function(){return 0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length&&0===sbr.ior.free()},sbr.kill=function(){sbr.rawInputQueue=[],sbr.buildQueue=[],sbr.ior.kill()},sbr.getVol=function(e,t){let l=[t[0]-e[0]+1,t[1]-e[1]+1,t[2]-e[2]+1];return{dims:l,vol:l[0]*l[1]*l[2]}},sbr.deconstructWalls=function(e){let[t,l,u,n,$]=e,s=[],i=Math.min(t[0],l[0]),o=Math.min(t[1],l[1]),a=Math.min(t[2],l[2]),r=Math.max(t[0],l[0]),c=Math.max(t[1],l[1]),_=Math.max(t[2],l[2]);n&&s.push([[i,o,a],[r,o,_],u]),$&&s.push([[i,c,a],[r,c,_],u]),s.push([[i,o,a],[i,c,_],u]),s.push([[r,o,a],[r,c,_],u]);let C=n?o+1:o,d=$?c-1:c;return C<=d&&i+1<=r-1&&(s.push([[i+1,C,a],[r-1,d,a],u]),s.push([[i+1,C,_],[r-1,d,_],u])),s},sbr.checkAndLoadChunks=function(e,t){let l=[Math.min(e[0],t[0]),Math.min(e[1],t[1]),Math.min(e[2],t[2])],u=[Math.max(e[0],t[0]),Math.max(e[1],t[1]),Math.max(e[2],t[2])],n=!0;for(let $=l[0];$<=u[0];$+=32)for(let s=l[1];s<=u[1];s+=32)for(let i=l[2];i<=u[2];i+=32)api.isBlockInLoadedChunk($,s,i)||(api.getBlockId($,s,i),n=!1);return n},sbr.getTaskRange=function(e){return e?"gclone"===e[0]||"rect_with_data"===e[0]?[e[1],e[2]]:3===e.length&&Array.isArray(e[0])?[e[0],e[1]]:2===e.length&&Array.isArray(e[0])?[e[0],e[0]]:[e.slice(0,3),e.slice(0,3)]:[[0,0,0],[0,0,0]]},sbr.tick=function(){if(sbr.rateLimitCooldown>0){sbr.rateLimitCooldown--;return}if(0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length){sbr.ior.tick();return}let e=0;for(;sbr.rawInputQueue.length>0&&e<50;){e++;let t=sbr.rawInputQueue.shift();for(;1===t.length&&Array.isArray(t[0]);)t=t[0];t.length>0&&(!Array.isArray(t[0])||Array.isArray(t[0])&&!Array.isArray(t[0][0]))&&(t=[t]);for(let l=0;l<t.length;l++){let u=t[l];if(u&&Array.isArray(u)){if(5===u.length&&"boolean"==typeof u[3]){let n=sbr.deconstructWalls(u);t.splice(l,1,...n),l--}else 4===u.length&&u.every(e=>Array.isArray(e))?sbr.buildQueue.push(["gclone",...u,{scanPos:null,run:null}]):sbr.buildQueue.push(u)}}}let $=sbr.TICK_BUDGET,s=0;for(;$>0&&sbr.buildQueue.length>0&&s<1e3;){s++;let i=sbr.buildQueue[0],[o,a]=sbr.getTaskRange(i);if(!sbr.checkAndLoadChunks(o,a)){$-=sbr.COST_CHUNK_CHECK;for(let r=1;r<Math.min(sbr.buildQueue.length,15)&&$>=sbr.COST_CHUNK_CHECK;r++){let[c,_]=sbr.getTaskRange(sbr.buildQueue[r]);sbr.checkAndLoadChunks(c,_),$-=sbr.COST_CHUNK_CHECK}break}try{if("gclone"===i[0]){let[C,d,f,h,T,g]=i,k=[Math.min(d[0],f[0]),Math.min(d[1],f[1]),Math.min(d[2],f[2])],A=[Math.max(d[0],f[0]),Math.max(d[1],f[1]),Math.max(d[2],f[2])],m=[A[0]-k[0]+1,A[1]-k[1]+1,A[2]-k[2]+1],b=[h[0]-d[0],h[1]-d[1],h[2]-d[2]];null===g.scanPos&&(g.scanPos=[0,0,0],g.run={startPos:[0,0,0],blockType:api.getBlockId(k[0],k[1],k[2])});let p=!1;for(;$>=sbr.COST_SCAN_BLOCK;){$-=sbr.COST_SCAN_BLOCK;let[S,B,I]=g.scanPos,L=api.getBlockId(k[0]+S,k[1]+B,k[2]+I);if(L!==g.run.blockType||S===m[0]-1){let O=g.run.startPos,Q=L!==g.run.blockType?S-1:S,D=g.run.blockType;if(D&&0!==D){let y=[k[0]+O[0]+b[0],k[1]+B+b[1],k[2]+I+b[2]],P=[k[0]+Q+b[0],k[1]+B+b[1],k[2]+I+b[2]];if(sbr.SPECIAL_BLOCK_IDS.has(D)){let U=[];for(let E=O[0];E<=Q&&$>=sbr.COST_SCAN_DATA;E++)$-=sbr.COST_SCAN_DATA,U.push(api.getBlockData(k[0]+E,k[1]+B,k[2]+I));sbr.buildQueue.splice(1,0,["rect_with_data",y,P,String(D),U,0])}else sbr.buildQueue.splice(1,0,[y,P,String(D)])}g.run={startPos:[S,B,I],blockType:L}}if(g.scanPos[0]++,g.scanPos[0]>=m[0]&&(g.scanPos[0]=0,g.scanPos[1]++,g.scanPos[1]>=m[1]&&(g.scanPos[1]=0,g.scanPos[2]++),g.scanPos[2]<m[2]&&(g.run={startPos:[...g.scanPos],blockType:api.getBlockId(k[0],k[1]+g.scanPos[1],k[2]+g.scanPos[2])})),g.scanPos[2]>=m[2]){p=!0;break}}p&&sbr.buildQueue.shift()}else if("rect_with_data"===i[0]){let[w,K,x,R,N,H]=i;0===H&&(api.setBlockRect(K,x,R),$-=sbr.COST_BUILD_RECT);let v=H;for(;$>=sbr.COST_BUILD_DATA&&v<N.length;)$-=sbr.COST_BUILD_DATA,null!==N[v]&&api.setBlockData(K[0]+v,K[1],K[2],N[v]),v++;v>=N.length?sbr.buildQueue.shift():i[5]=v}else if(3===i.length&&Array.isArray(i[0])){let[M,V,G]=i,W=[Math.min(M[0],V[0]),Math.min(M[1],V[1]),Math.min(M[2],V[2])],X=[Math.max(M[0],V[0]),Math.max(M[1],V[1]),Math.max(M[2],V[2])],{dims:j,vol:q}=sbr.getVol(W,X);if(q>sbr.MAX_RECT_VOLUME){let z=j.indexOf(Math.max(...j)),F=W[z]+Math.floor(j[z]/2)-1,J=[...X];J[z]=F;let Y=[...W];Y[z]=F+1,sbr.buildQueue.splice(0,1,[W,J,G],[Y,X,G]),$-=sbr.COST_SPLIT_RECT}else api.setBlockRect(W,X,String(G)),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_RECT}else if(2===i.length&&Array.isArray(i[0]))api.setBlockData(i[0][0],i[0][1],i[0][2],i[1]),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_DATA;else if(4!==i.length||Array.isArray(i[0]))sbr.buildQueue.shift();else{let Z=i[3];"object"==typeof Z&&null!==Z?(api.setBlockData(i[0],i[1],i[2],Z),$-=sbr.COST_BUILD_DATA):(api.setBlock(i[0],i[1],i[2],String(Z)),$-=sbr.COST_BUILD_RECT/10),sbr.buildQueue.shift()}}catch(ee){let et=ee.message?ee.message.toLowerCase():"";if(et.includes("rate limit"))sbr.rateLimitCooldown=5;else if(et.includes("interrupted"))break;else api.log("sbr error: "+ee.message),sbr.buildQueue.shift()}}};{let e=(t,l,u,n)=>{("number"!=typeof n||isNaN(n))&&(n=1),("number"!=typeof l||isNaN(l))&&(l=0),("number"!=typeof u||isNaN(u))&&(u=l,l=0),n=Math.abs(n)*Math.sign(u-l),e.stack.push({cb:t,start:l,end:u,inc:n,count:0})};e.stack=[],e.tickBudget=100,e.defaultBudgetUsed=1,e.free=()=>!e.stack.length,e.kill=()=>void(e.stack=[]),e.tick=()=>{let t=e.tickBudget;for(;t>0&&e.stack.length>0;){let l=e.stack[e.stack.length-1],u=l.count*l.inc+l.start;(l.inc>0?u<l.end:u>l.end)?(t-=l.cb(u)??e.defaultBudgetUsed,l.count++):e.stack.pop()}},e.levels=(t,l)=>{let u=t;for(let n=0;n<l.length;n++){let $=u,[s,i,o]=l[l.length-1-n];u=t=>e(e=>$([...t,e]),s,i,o)}u([])},sbr.ior=e}
+
+// --- SACRED MOONSTONE TEMPLE CONFIGURATION ---
+const OX = 0;   // Origin X of the Temple
+const OY = 10;  // Ground Y offset
+const OZ = 0;   // Origin Z of the Temple
+
+// Helper to construct individual ornate quartz/diorite columns
+function buildColumnAt(cx, cz, height) {
+    // Column Base
+    sbr([[OX + cx - 1, OY + 3, OZ + cz - 1], [OX + cx + 1, OY + 3, OZ + cz + 1], "Chiseled Block of Quartz"]);
+    sbr([[OX + cx, OY + 3, OZ + cz], [OX + cx, OY + 3, OZ + cz], "Dim Lamp On"]);
+    
+    // Column Shaft
+    sbr([[OX + cx, OY + 4, OZ + cz], [OX + cx, OY + 3 + height, OZ + cz], "Smooth Diorite"]);
+    
+    // Column Capital
+    sbr([[OX + cx - 1, OY + 4 + height, OZ + cz - 1], [OX + cx + 1, OY + 4 + height, OZ + cz + 1], "Chiseled Block of Quartz"]);
+}
+
+// --- 1. DECLARATION OF MINI FUNCTIONS ---
+
+// --- Group 1: Groundwork & Sacred Podium ---
+function fn_clearTempleArea() {
+    // Clear air space for temple complex
+    sbr([OX - 28, OY, OZ - 28], [OX + 28, OY + 45, OZ + 28], "Air");
+    // Foundation floor below platform
+    sbr([OX - 28, OY - 1, OZ - 28], [OX + 28, OY - 1, OZ + 28], "Grass Block");
+}
+
+function fn_buildPlatformStepped() {
+    // Stepped terraced platform of pure quartz and smooth stone
+    sbr([OX - 26, OY, OZ - 26], [OX + 26, OY, OZ + 26], "Smooth Stone");
+    sbr([OX - 24, OY + 1, OZ - 24], [OX + 24, OY + 1, OZ + 24], "White Concrete");
+    sbr([OX - 22, OY + 2, OZ - 22], [OX + 22, OY + 2, OZ + 22], "Block of Quartz");
+}
+
+function fn_buildReflectionPools() {
+    // Corner water basins reflecting celestial light
+    const poolOffsets = [[-16, -16], [16, -16], [-16, 16], [16, 16]];
+    for (let i = 0; i < poolOffsets.length; i++) {
+        let [px, pz] = poolOffsets[i];
+        sbr([[OX + px - 4, OY + 2, OZ + pz - 4], [OX + px + 4, OY + 2, OZ + pz + 4], "Light Blue Concrete"]);
+        sbr([[OX + px - 3, OY + 2, OZ + pz - 3], [OX + px + 3, OY + 2, OZ + pz + 3], "Water"]);
+        sbr([[OX + px, OY + 2, OZ + pz], [OX + px, OY + 2, OZ + pz], "Dim Lamp On"]);
+    }
+}
+
+// --- Group 2: Peristyle & Outer Colonnade ---
+function fn_outerColonnadeRing() {
+    // Outer circular colonnade around temple podium
+    sbr.ior.levels(coords => {
+        let [angleStep] = coords;
+        let rad = 18;
+        let angle = (angleStep * Math.PI) / 8; // 16 columns around circumference
+        let cx = Math.round(Math.cos(angle) * rad);
+        let cz = Math.round(Math.sin(angle) * rad);
+        
+        // Skip front entryway corridor
+        if (cz > 14 && Math.abs(cx) < 6) return;
+        
+        buildColumnAt(cx, cz, 10);
+    }, [[0, 16, 1]]);
+}
+
+function fn_innerColonnadeRing() {
+    // Inner sanctum colonnade
+    sbr.ior.levels(coords => {
+        let [angleStep] = coords;
+        let rad = 11;
+        let angle = (angleStep * Math.PI) / 6; // 12 inner pillars
+        let cx = Math.round(Math.cos(angle) * rad);
+        let cz = Math.round(Math.sin(angle) * rad);
+        
+        // Leave front entrance open
+        if (cz > 8 && Math.abs(cx) < 4) return;
+
+        buildColumnAt(cx, cz, 12);
+    }, [[0, 12, 1]]);
+}
+
+// --- Group 3: Inner Sanctum Walls & Archways ---
+function fn_sanctumWalls() {
+    // Octagonal inner sanctuary wall base
+    sbr.ior.levels(coords => {
+        let [x, z, y] = coords;
+        let distSq = x * x + z * z;
+        let isWallRing = distSq >= 144 && distSq <= 175;
+        let isEntrancePath = (z > 8 && Math.abs(x) <= 3);
+
+        if (isWallRing && !isEntrancePath) {
+            if (y === 0) {
+                api.setBlock(OX + x, OY + 3 + y, OZ + z, "Chiseled Block of Quartz");
+            } else if (y === 11) {
+                api.setBlock(OX + x, OY + 3 + y, OZ + z, "Block of Quartz");
+            } else if (y % 4 === 0) {
+                api.setBlock(OX + x, OY + 3 + y, OZ + z, "Light Blue Glass");
+            } else {
+                api.setBlock(OX + x, OY + 3 + y, OZ + z, "White Concrete");
+            }
+        }
+    }, [[-14, 15, 1], [-14, 15, 1], [0, 12, 1]]);
+}
+
+function fn_grandStaircaseAndEntrance() {
+    // Grand front approach stairs leading up to sanctuary
+    sbr.ior(step => {
+        let zPos = 26 - step;
+        let yPos = OY + step;
+        sbr([[OX - 6, yPos, OZ + zPos], [OX + 6, yPos, OZ + zPos], "Block of Quartz"]);
+        sbr([[OX - 6, yPos - 1, OZ + zPos], [OX + 6, yPos - 1, OZ + zPos], "Smooth Stone"]);
+        // Decorative glowing balustrades
+        sbr([[OX - 7, yPos + 1, OZ + zPos], [OX - 7, yPos + 1, OZ + zPos], "Chiseled Block of Quartz"]);
+        sbr([[OX + 7, yPos + 1, OZ + zPos], [OX + 7, yPos + 1, OZ + zPos], "Chiseled Block of Quartz"]);
+        if (step % 2 === 0) {
+            sbr([[OX - 7, yPos + 2, OZ + zPos], [OX - 7, yPos + 2, OZ + zPos], "Dim Lamp On"]);
+            sbr([[OX + 7, yPos + 2, OZ + zPos], [OX + 7, yPos + 2, OZ + zPos], "Dim Lamp On"]);
+        }
+    }, 0, 3);
+}
+
+// --- Group 4: Sacred Moonstone Altar & Celestial Shrine ---
+function fn_shrineReflectionPool() {
+    // Circular sacred pool surrounding altar pedestal
+    sbr.ior.levels(coords => {
+        let [dx, dz] = coords;
+        let distSq = dx * dx + dz * dz;
+        if (distSq <= 25) {
+            if (distSq >= 16) {
+                api.setBlock(OX + dx, OY + 2, OZ + dz, "Block of Diamond");
+            } else if (distSq >= 4) {
+                api.setBlock(OX + dx, OY + 2, OZ + dz, "Water");
+                api.setBlock(OX + dx, OY + 1, OZ + dz, "Block of Lapis Lazuli");
+            }
+        }
+    }, [[-6, 7, 1], [-6, 7, 1]]);
+}
+
+function fn_moonstoneAltarCore() {
+    // Stepped altar tier holding the sacred Moonstone core
+    sbr([[OX - 2, OY + 3, OZ - 2], [OX + 2, OY + 3, OZ + 2], "Chiseled Block of Quartz"]);
+    sbr([[OX - 1, OY + 4, OZ - 1], [OX + 1, OY + 4, OZ + 1], "Block of Quartz"]);
+    
+    // Moonstone explosive core flanked by divine beacon & diamond highlights
+    sbr([[OX, OY + 5, OZ], [OX, OY + 5, OZ], "Moonstone Explosive"]);
+    sbr([[OX, OY + 6, OZ], [OX, OY + 6, OZ], "Beacon"]);
+
+    // Floating celestial ornament accents around the moonstone
+    api.setBlock(OX - 2, OY + 6, OZ, "Block of Diamond");
+    api.setBlock(OX + 2, OY + 6, OZ, "Block of Diamond");
+    api.setBlock(OX, OY + 6, OZ - 2, "Block of Diamond");
+    api.setBlock(OX, OY + 6, OZ + 2, "Block of Diamond");
+
+    api.setBlock(OX - 2, OY + 7, OZ, "Golden Decoration");
+    api.setBlock(OX + 2, OY + 7, OZ, "Golden Decoration");
+    api.setBlock(OX, OY + 7, OZ - 2, "Golden Decoration");
+    api.setBlock(OX, OY + 7, OZ + 2, "Golden Decoration");
+}
+
+function fn_sacredFloraGardens() {
+    // Celestial garden beds surrounding temple steps
+    sbr.ior.levels(coords => {
+        let [x, z] = coords;
+        let isGardenArea = (Math.abs(x) >= 18 && Math.abs(x) <= 24 && Math.abs(z) <= 22);
+        if (isGardenArea) {
+            api.setBlock(OX + x, OY + 1, OZ + z, "Grass Block");
+            let p = Math.random();
+            if (p < 0.20) {
+                api.setBlock(OX + x, OY + 2, OZ + z, "Lily of the Valley");
+            } else if (p < 0.40) {
+                api.setBlock(OX + x, OY + 2, OZ + z, "Bluebell");
+            } else if (p < 0.60) {
+                api.setBlock(OX + x, OY + 2, OZ + z, "Forget-me-not");
+            } else if (p < 0.75) {
+                api.setBlock(OX + x, OY + 2, OZ + z, "Shadow Rose");
+            } else if (p < 0.90) {
+                api.setBlock(OX + x, OY + 2, OZ + z, "Allium");
+            }
+        }
+    }, [[-24, 25, 1], [-22, 23, 1]]);
+}
+
+// --- Group 5: Celestial Roof, Glass Dome & Spire ---
+function fn_entablatureAndRoofBase() {
+    // Architrave and entablature resting above outer colonnade
+    sbr.ior.levels(coords => {
+        let [x, z] = coords;
+        let distSq = x * x + z * z;
+        if (distSq >= 144 && distSq <= 360) {
+            api.setBlock(OX + x, OY + 15, OZ + z, "Block of Quartz");
+            if (distSq >= 280) {
+                api.setBlock(OX + x, OY + 16, OZ + z, "Light Blue Concrete");
+            }
+        }
+    }, [[-19, 20, 1], [-19, 20, 1]]);
+}
+
+function fn_glassDomeOfLunarLight() {
+    // Semi-spherical glass dome directly over central sanctum
+    sbr.ior.levels(coords => {
+        let [dx, dz, dy] = coords;
+        let distSq = dx * dx + dz * dz + dy * dy;
+        // Hemisphere shell around radius 13
+        if (distSq >= 140 && distSq <= 175) {
+            if (dy % 2 === 0) {
+                api.setBlock(OX + dx, OY + 15 + dy, OZ + dz, "Light Blue Glass");
+            } else {
+                api.setBlock(OX + dx, OY + 15 + dy, OZ + dz, "White Glass");
+            }
+        }
+        // Supporting quartz ribbing
+        if ((dx === 0 || dz === 0) && distSq >= 135 && distSq <= 180) {
+            api.setBlock(OX + dx, OY + 15 + dy, OZ + dz, "Chiseled Block of Quartz");
+        }
+    }, [[-14, 15, 1], [-14, 15, 1], [0, 14, 1]]);
+}
+
+function fn_celestialMoonSpire() {
+    // Spire crowning top of dome reaching towards the stars
+    sbr.ior(h => {
+        let y = OY + 28 + h;
+        if (h < 5) {
+            sbr([[OX - 1, y, OZ - 1], [OX + 1, y, OZ + 1], "Block of Quartz"]);
+        } else if (h < 10) {
+            sbr([[OX, y, OZ], [OX, y, OZ], "Block of Diamond"]);
+        } else if (h < 14) {
+            sbr([[OX, y, OZ], [OX, y, OZ], "Smooth Diorite"]);
+        }
+    }, 0, 14);
+
+    // Tip pinnacle
+    api.setBlock(OX, OY + 43, OZ, "Block of Gold");
+    api.setBlock(OX, OY + 44, OZ, "Golden Decoration");
+    api.setBlock(OX, OY + 45, OZ, "Beacon");
+}
+
+// --- 2. ARRAY OF ARRAYS OF MINI FUNCTIONS ---
+const mini_groundwork = [fn_clearTempleArea, fn_buildPlatformStepped, fn_buildReflectionPools];
+const mini_colonnades = [fn_outerColonnadeRing, fn_innerColonnadeRing];
+const mini_sanctum = [fn_sanctumWalls, fn_grandStaircaseAndEntrance];
+const mini_altar = [fn_shrineReflectionPool, fn_moonstoneAltarCore, fn_sacredFloraGardens];
+const mini_domeSpire = [fn_entablatureAndRoofBase, fn_glassDomeOfLunarLight, fn_celestialMoonSpire];
+
+const MINI_FUNCTIONS_GROUPS = [
+    mini_groundwork,
+    mini_colonnades,
+    mini_sanctum,
+    mini_altar,
+    mini_domeSpire
+];
+
+// --- 3. DECLARATION OF SUB-SECTION MANAGER FUNCTIONS ---
+function mgr_groundwork() {
+    sbr.ior(i => mini_groundwork[i](), 0, mini_groundwork.length);
+}
+
+function mgr_colonnades() {
+    sbr.ior(i => mini_colonnades[i](), 0, mini_colonnades.length);
+}
+
+function mgr_sanctum() {
+    sbr.ior(i => mini_sanctum[i](), 0, mini_sanctum.length);
+}
+
+function mgr_altar() {
+    sbr.ior(i => mini_altar[i](), 0, mini_altar.length);
+}
+
+function mgr_domeSpire() {
+    sbr.ior(i => mini_domeSpire[i](), 0, mini_domeSpire.length);
+}
+
+// --- 4. ARRAY OF MANAGER FUNCTIONS ---
+const MANAGER_FUNCTIONS = [
+    mgr_groundwork,
+    mgr_colonnades,
+    mgr_sanctum,
+    mgr_altar,
+    mgr_domeSpire
+];
+
+// --- 5. DECLARATION OF SINGLE MASTER FUNCTION ---
+function master_buildMoonstoneTemple(coords) {
+    let stageIdx = coords[0];
+    MANAGER_FUNCTIONS[stageIdx]();
+}
+
+// --- 6. SINGLE SBR.IOR.LEVELS CALL TO EXECUTE ---
+sbr.ior.levels(master_buildMoonstoneTemple, [[0, MANAGER_FUNCTIONS.length, 1]]);
+
+// --- 7. EXECUTOR HOOK ---
+tick = () => {
+    sbr.tick();
+};
+```
+
+another example:
+
+Prompt: "make the eye of sauron"
+Code:
+```js
+/*sbr by Ocelote, licensable under CC0*/(sbr=function(...e){e.length>0&&sbr.rawInputQueue.push(e)}).rawInputQueue=[],sbr.buildQueue=[],sbr.rateLimitCooldown=0,sbr.SPECIAL_BLOCK_IDS=new Set([204,205,206,207,952,953,954,955,1291,1292,1293,1294,1510,2088,2089,2090,2091]),sbr.MAX_RECT_VOLUME=360,sbr.TICK_BUDGET=250,sbr.COST_SCAN_BLOCK=.5,sbr.COST_SCAN_DATA=.7,sbr.COST_BUILD_RECT=10,sbr.COST_BUILD_DATA=1,sbr.COST_SPLIT_RECT=2,sbr.COST_CHUNK_CHECK=8,sbr.free=function(){return 0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length&&0===sbr.ior.free()},sbr.kill=function(){sbr.rawInputQueue=[],sbr.buildQueue=[],sbr.ior.kill()},sbr.getVol=function(e,t){let l=[t[0]-e[0]+1,t[1]-e[1]+1,t[2]-e[2]+1];return{dims:l,vol:l[0]*l[1]*l[2]}},sbr.deconstructWalls=function(e){let[t,l,u,n,$]=e,s=[],i=Math.min(t[0],l[0]),o=Math.min(t[1],l[1]),a=Math.min(t[2],l[2]),r=Math.max(t[0],l[0]),c=Math.max(t[1],l[1]),_=Math.max(t[2],l[2]);n&&s.push([[i,o,a],[r,o,_],u]),$&&s.push([[i,c,a],[r,c,_],u]),s.push([[i,o,a],[i,c,_],u]),s.push([[r,o,a],[r,c,_],u]);let C=n?o+1:o,d=$?c-1:c;return C<=d&&i+1<=r-1&&(s.push([[i+1,C,a],[r-1,d,a],u]),s.push([[i+1,C,_],[r-1,d,_],u])),s},sbr.checkAndLoadChunks=function(e,t){let l=[Math.min(e[0],t[0]),Math.min(e[1],t[1]),Math.min(e[2],t[2])],u=[Math.max(e[0],t[0]),Math.max(e[1],t[1]),Math.max(e[2],t[2])],n=!0;for(let $=l[0];$<=u[0];$+=32)for(let s=l[1];s<=u[1];s+=32)for(let i=l[2];i<=u[2];i+=32)api.isBlockInLoadedChunk($,s,i)||(api.getBlockId($,s,i),n=!1);return n},sbr.getTaskRange=function(e){return e?"gclone"===e[0]||"rect_with_data"===e[0]?[e[1],e[2]]:3===e.length&&Array.isArray(e[0])?[e[0],e[1]]:2===e.length&&Array.isArray(e[0])?[e[0],e[0]]:[e.slice(0,3),e.slice(0,3)]:[[0,0,0],[0,0,0]]},sbr.tick=function(){if(sbr.rateLimitCooldown>0){sbr.rateLimitCooldown--;return}if(0===sbr.rawInputQueue.length&&0===sbr.buildQueue.length){sbr.ior.tick();return}let e=0;for(;sbr.rawInputQueue.length>0&&e<50;){e++;let t=sbr.rawInputQueue.shift();for(;1===t.length&&Array.isArray(t[0]);)t=t[0];t.length>0&&(!Array.isArray(t[0])||Array.isArray(t[0])&&!Array.isArray(t[0][0]))&&(t=[t]);for(let l=0;l<t.length;l++){let u=t[l];if(u&&Array.isArray(u)){if(5===u.length&&"boolean"==typeof u[3]){let n=sbr.deconstructWalls(u);t.splice(l,1,...n),l--}else 4===u.length&&u.every(e=>Array.isArray(e))?sbr.buildQueue.push(["gclone",...u,{scanPos:null,run:null}]):sbr.buildQueue.push(u)}}}let $=sbr.TICK_BUDGET,s=0;for(;$>0&&sbr.buildQueue.length>0&&s<1e3;){s++;let i=sbr.buildQueue[0],[o,a]=sbr.getTaskRange(i);if(!sbr.checkAndLoadChunks(o,a)){$-=sbr.COST_CHUNK_CHECK;for(let r=1;r<Math.min(sbr.buildQueue.length,15)&&$>=sbr.COST_CHUNK_CHECK;r++){let[c,_]=sbr.getTaskRange(sbr.buildQueue[r]);sbr.checkAndLoadChunks(c,_),$-=sbr.COST_CHUNK_CHECK}break}try{if("gclone"===i[0]){let[C,d,f,h,T,g]=i,k=[Math.min(d[0],f[0]),Math.min(d[1],f[1]),Math.min(d[2],f[2])],A=[Math.max(d[0],f[0]),Math.max(d[1],f[1]),Math.max(d[2],f[2])],m=[A[0]-k[0]+1,A[1]-k[1]+1,A[2]-k[2]+1],b=[h[0]-d[0],h[1]-d[1],h[2]-d[2]];null===g.scanPos&&(g.scanPos=[0,0,0],g.run={startPos:[0,0,0],blockType:api.getBlockId(k[0],k[1],k[2])});let p=!1;for(;$>=sbr.COST_SCAN_BLOCK;){$-=sbr.COST_SCAN_BLOCK;let[S,B,I]=g.scanPos,L=api.getBlockId(k[0]+S,k[1]+B,k[2]+I);if(L!==g.run.blockType||S===m[0]-1){let O=g.run.startPos,Q=L!==g.run.blockType?S-1:S,D=g.run.blockType;if(D&&0!==D){let y=[k[0]+O[0]+b[0],k[1]+B+b[1],k[2]+I+b[2]],P=[k[0]+Q+b[0],k[1]+B+b[1],k[2]+I+b[2]];if(sbr.SPECIAL_BLOCK_IDS.has(D)){let U=[];for(let E=O[0];E<=Q&&$>=sbr.COST_SCAN_DATA;E++)$-=sbr.COST_SCAN_DATA,U.push(api.getBlockData(k[0]+E,k[1]+B,k[2]+I));sbr.buildQueue.splice(1,0,["rect_with_data",y,P,String(D),U,0])}else sbr.buildQueue.splice(1,0,[y,P,String(D)])}g.run={startPos:[S,B,I],blockType:L}}if(g.scanPos[0]++,g.scanPos[0]>=m[0]&&(g.scanPos[0]=0,g.scanPos[1]++,g.scanPos[1]>=m[1]&&(g.scanPos[1]=0,g.scanPos[2]++),g.scanPos[2]<m[2]&&(g.run={startPos:[...g.scanPos],blockType:api.getBlockId(k[0],k[1]+g.scanPos[1],k[2]+g.scanPos[2])})),g.scanPos[2]>=m[2]){p=!0;break}}p&&sbr.buildQueue.shift()}else if("rect_with_data"===i[0]){let[w,K,x,R,N,H]=i;0===H&&(api.setBlockRect(K,x,R),$-=sbr.COST_BUILD_RECT);let v=H;for(;$>=sbr.COST_BUILD_DATA&&v<N.length;)$-=sbr.COST_BUILD_DATA,null!==N[v]&&api.setBlockData(K[0]+v,K[1],K[2],N[v]),v++;v>=N.length?sbr.buildQueue.shift():i[5]=v}else if(3===i.length&&Array.isArray(i[0])){let[M,V,G]=i,W=[Math.min(M[0],V[0]),Math.min(M[1],V[1]),Math.min(M[2],V[2])],X=[Math.max(M[0],V[0]),Math.max(M[1],V[1]),Math.max(M[2],V[2])],{dims:j,vol:q}=sbr.getVol(W,X);if(q>sbr.MAX_RECT_VOLUME){let z=j.indexOf(Math.max(...j)),F=W[z]+Math.floor(j[z]/2)-1,J=[...X];J[z]=F;let Y=[...W];Y[z]=F+1,sbr.buildQueue.splice(0,1,[W,J,G],[Y,X,G]),$-=sbr.COST_SPLIT_RECT}else api.setBlockRect(W,X,String(G)),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_RECT}else if(2===i.length&&Array.isArray(i[0]))api.setBlockData(i[0][0],i[0][1],i[0][2],i[1]),sbr.buildQueue.shift(),$-=sbr.COST_BUILD_DATA;else if(4!==i.length||Array.isArray(i[0]))sbr.buildQueue.shift();else{let Z=i[3];"object"==typeof Z&&null!==Z?(api.setBlockData(i[0],i[1],i[2],Z),$-=sbr.COST_BUILD_DATA):(api.setBlock(i[0],i[1],i[2],String(Z)),$-=sbr.COST_BUILD_RECT/10),sbr.buildQueue.shift()}}catch(ee){let et=ee.message?ee.message.toLowerCase():"";if(et.includes("rate limit"))sbr.rateLimitCooldown=5;else if(et.includes("interrupted"))break;else api.log("sbr error: "+ee.message),sbr.buildQueue.shift()}}};{let e=(t,l,u,n)=>{("number"!=typeof n||isNaN(n))&&(n=1),("number"!=typeof l||isNaN(l))&&(l=0),("number"!=typeof u||isNaN(u))&&(u=l,l=0),n=Math.abs(n)*Math.sign(u-l),e.stack.push({cb:t,start:l,end:u,inc:n,count:0})};e.stack=[],e.tickBudget=100,e.defaultBudgetUsed=1,e.free=()=>!e.stack.length,e.kill=()=>void(e.stack=[]),e.tick=()=>{let t=e.tickBudget;for(;t>0&&e.stack.length>0;){let l=e.stack[e.stack.length-1],u=l.count*l.inc+l.start;(l.inc>0?u<l.end:u>l.end)?(t-=l.cb(u)??e.defaultBudgetUsed,l.count++):e.stack.pop()}},e.levels=(t,l)=>{let u=t;for(let n=0;n<l.length;n++){let $=u,[s,i,o]=l[l.length-1-n];u=t=>e(e=>$([...t,e]),s,i,o)}u([])},sbr.ior=e}
+
+// --- CONFIGURATION & ORIGIN ---
+const OX = 0;
+const OY = 10;
+const OZ = 0;
+
+const DARK_BLOCKS = ["Obsidian", "Black Concrete", "Block of Coal", "Dark Red Stone"];
+
+function getDarkStone() {
+    return DARK_BLOCKS[Math.floor(Math.random() * DARK_BLOCKS.length)];
+}
+
+// --- 1. DECLARATION OF MINI-FUNCTIONS ---
+
+// Clear construction zone
+function fn_clearArea() {
+    sbr([OX - 35, OY, OZ - 35], [OX + 35, OY + 85, OZ + 35], "Air");
+}
+
+// Base volcanic foundation
+function fn_buildVolcanicBase() {
+    sbr([OX - 30, OY - 2, OZ - 30], [OX + 30, OY, OZ + 30], "Obsidian");
+    
+    // Jagged volcanic rock & lava veins around base
+    sbr.ior.levels(coords => {
+        let [dx, dz] = coords;
+        let distSq = dx * dx + dz * dz;
+        if (distSq >= 300 && distSq <= 800) {
+            let h = Math.floor(Math.random() * 4);
+            let mat = (distSq % 7 === 0) ? "Dark Red Stone" : (distSq % 11 === 0 ? "Dim Lamp On" : "Obsidian");
+            sbr([OX + dx, OY, OZ + dz], [OX + dx, OY + h, OZ + dz], mat);
+        }
+    }, [[-28, 29, 2], [-28, 29, 2]]);
+}
+
+// Tapered fortress body (Barad-dÃ»r spire shaft)
+function fn_buildSpireShaft() {
+    sbr.ior.levels(coords => {
+        let [y] = coords;
+        let progress = y / 48; // 0.0 at base, 1.0 at crown base
+        let radius = Math.floor(14 * (1 - progress * 0.55));
+        
+        sbr.ior.levels(inner => {
+            let [dx, dz] = inner;
+            let distSq = dx * dx + dz * dz;
+            let outerR = radius;
+            let innerR = radius - 2;
+
+            if (distSq <= outerR * outerR && distSq >= innerR * innerR) {
+                // Ribbed spires & glowing cracks along shaft
+                if ((dx === 0 || dz === 0) && y % 3 !== 0) {
+                    api.setBlock(OX + dx, OY + y, OZ + dz, "Dark Red Stone");
+                } else {
+                    api.setBlock(OX + dx, OY + y, OZ + dz, getDarkStone());
+                }
+            } else if (distSq < innerR * innerR && y % 12 === 0) {
+                api.setBlock(OX + dx, OY + y, OZ + dz, "Block of Coal");
+            }
+        }, [[-14, 15, 1], [-14, 15, 1]]);
+    }, [[1, 49, 1]]);
+}
+
+// Buttresses and iron-like spikes protruding from the lower body
+function fn_buildButtresses() {
+    const angles = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2];
+    for (let i = 0; i < angles.length; i++) {
+        let cos = Math.cos(angles[i]);
+        let sin = Math.sin(angles[i]);
+        sbr.ior(h => {
+            let r = Math.floor(16 - (h * 0.25));
+            let px = Math.round(cos * r);
+            let pz = Math.round(sin * r);
+            sbr([OX + px - 1, OY + h, OZ + pz - 1], [OX + px + 1, OY + h + 2, OZ + pz + 1], "Obsidian");
+            api.setBlock(OX + px, OY + h + 3, OZ + pz, "Dark Red Stone");
+        }, 1, 35, 4);
+    }
+}
+
+// Left Horn / Prong of the Crown
+function fn_buildLeftHorn() {
+    sbr.ior(h => {
+        // Curve outwards then taper sharp inwards
+        let shiftX = -7 - Math.floor(Math.sin(h / 10) * 5);
+        let rad = Math.max(1, Math.floor(3.5 - (h * 0.12)));
+        
+        sbr.ior.levels(coords => {
+            let [dx, dz] = coords;
+            if (dx * dx + dz * dz <= rad * rad) {
+                api.setBlock(OX + shiftX + dx, OY + 48 + h, OZ + dz, getDarkStone());
+            }
+        }, [[-4, 5, 1], [-4, 5, 1]]);
+        
+        if (h === 29) {
+            api.setBlock(OX + shiftX, OY + 48 + h + 1, OZ, "Dark Red Stone");
+        }
+    }, 0, 30, 1);
+}
+
+// Right Horn / Prong of the Crown
+function fn_buildRightHorn() {
+    sbr.ior(h => {
+        let shiftX = 7 + Math.floor(Math.sin(h / 10) * 5);
+        let rad = Math.max(1, Math.floor(3.5 - (h * 0.12)));
+        
+        sbr.ior.levels(coords => {
+            let [dx, dz] = coords;
+            if (dx * dx + dz * dz <= rad * rad) {
+                api.setBlock(OX + shiftX + dx, OY + 48 + h, OZ + dz, getDarkStone());
+            }
+        }, [[-4, 5, 1], [-4, 5, 1]]);
+
+        if (h === 29) {
+            api.setBlock(OX + shiftX, OY + 48 + h + 1, OZ, "Dark Red Stone");
+        }
+    }, 0, 30, 1);
+}
+
+// Fiery aura of the Eye of Sauron (Floating lens of fire)
+function fn_buildEyeAura() {
+    const EYE_Y = OY + 62;
+    sbr.ior.levels(coords => {
+        let [dx, dy, dz] = coords;
+        // Ellipsoidal lens formula
+        let nx = dx / 9.0;
+        let ny = dy / 5.5;
+        let nz = dz / 3.0;
+        let distSq = nx * nx + ny * ny + nz * nz;
+
+        if (distSq <= 1.0) {
+            let mat = "Red Concrete";
+            if (distSq < 0.3) {
+                mat = "Yellow Concrete";
+            } else if (distSq < 0.65) {
+                mat = "Orange Concrete";
+            } else if (distSq > 0.85) {
+                mat = (Math.random() < 0.4) ? "Dim Lamp On" : "Red Wool";
+            }
+            api.setBlock(OX + dx, EYE_Y + dy, OZ + dz, mat);
+        }
+    }, [[-9, 10, 1], [-6, 7, 1], [-3, 4, 1]]);
+}
+
+// Vertical Slit Pupil of Sauron's Eye
+function fn_buildEyePupil() {
+    const EYE_Y = OY + 62;
+    // Dark vertical slit in the center of the lens
+    sbr.ior.levels(coords => {
+        let [dy, dz] = coords;
+        if (Math.abs(dy) <= 4) {
+            api.setBlock(OX, EYE_Y + dy, OZ + dz, "Black Concrete");
+            api.setBlock(OX - 1, EYE_Y + dy, OZ + dz, "Black Wool");
+            api.setBlock(OX + 1, EYE_Y + dy, OZ + dz, "Black Wool");
+        }
+    }, [[-5, 6, 1], [-2, 3, 1]]);
+    
+    // Bright fiery focal center (White/Yellow core framing the pupil)
+    api.setBlock(OX - 2, EYE_Y, OZ, "White Concrete");
+    api.setBlock(OX + 2, EYE_Y, OZ, "White Concrete");
+    api.setBlock(OX, EYE_Y + 5, OZ, "Yellow Wool");
+    api.setBlock(OX, EYE_Y - 5, OZ, "Yellow Wool");
+}
+
+// Energy tendrils connecting the horns to the Eye
+function fn_buildTendrils() {
+    const EYE_Y = OY + 62;
+    sbr.ior(i => {
+        let t = i / 10;
+        // Left tendril
+        let lx = Math.round(-10 + t * 8);
+        let ly = Math.round(EYE_Y + (Math.sin(i) * 2));
+        api.setBlock(OX + lx, ly, OZ, "Orange Concrete");
+        api.setBlock(OX + lx, ly + 1, OZ, "Dim Lamp On");
+
+        // Right tendril
+        let rx = Math.round(10 - t * 8);
+        let ry = Math.round(EYE_Y + (Math.cos(i) * 2));
+        api.setBlock(OX + rx, ry, OZ, "Orange Concrete");
+        api.setBlock(OX + rx, ry + 1, OZ, "Dim Lamp On");
+    }, 0, 11, 1);
+}
+
+// Glowing Window Slits along the Fortress Body
+function fn_buildSpireWindows() {
+    sbr.ior(y => {
+        if (y % 6 === 0) {
+            api.setBlock(OX, OY + y, OZ + 6, "Dim Lamp On");
+            api.setBlock(OX, OY + y, OZ - 6, "Dim Lamp On");
+            api.setBlock(OX + 6, OY + y, OZ, "Dim Lamp On");
+            api.setBlock(OX - 6, OY + y, OZ, "Dim Lamp On");
+        }
+    }, 6, 42, 1);
+}
+
+// --- 2. ARRAY OF ARRAYS OF MINI-FUNCTIONS ---
+const mini_foundationGroup = [fn_clearArea, fn_buildVolcanicBase];
+const mini_spireGroup = [fn_buildSpireShaft, fn_buildButtresses, fn_buildSpireWindows];
+const mini_crownGroup = [fn_buildLeftHorn, fn_buildRightHorn];
+const mini_eyeGroup = [fn_buildEyeAura, fn_buildEyePupil, fn_buildTendrils];
+
+const MINI_FUNCTIONS_GROUPS = [
+    mini_foundationGroup,
+    mini_spireGroup,
+    mini_crownGroup,
+    mini_eyeGroup
+];
+
+// --- 3. DECLARATION OF SUB-SECTION MANAGER FUNCTIONS ---
+function mgr_foundation() {
+    sbr.ior(i => mini_foundationGroup[i](), 0, mini_foundationGroup.length);
+}
+
+function mgr_spire() {
+    sbr.ior(i => mini_spireGroup[i](), 0, mini_spireGroup.length);
+}
+
+function mgr_crown() {
+    sbr.ior(i => mini_crownGroup[i](), 0, mini_crownGroup.length);
+}
+
+function mgr_eye() {
+    sbr.ior(i => mini_eyeGroup[i](), 0, mini_eyeGroup.length);
+}
+
+// --- 4. ARRAY OF MANAGER FUNCTIONS ---
+const MANAGER_FUNCTIONS = [
+    mgr_foundation,
+    mgr_spire,
+    mgr_crown,
+    mgr_eye
+];
+
+// --- 5. DECLARATION OF SINGLE MASTER FUNCTION ---
+function master_buildEyeOfSauron(coords) {
+    let idx = coords[0];
+    MANAGER_FUNCTIONS[idx]();
+}
+
+// --- 6. SINGLE SBR.IOR.LEVELS CALL TO EXECUTE ---
+sbr.ior.levels(master_buildEyeOfSauron, [[0, MANAGER_FUNCTIONS.length, 1]]);
+
+// --- 7. EXECUTOR HOOK ---
+tick = () => {
+    sbr.tick();
+};
+```
 
 Now, your task is to:
 
-[insert prompt here (e.g. "make a futuristic village")]
+[insert prompt here (e.g. "make a futuristic village"). AIs and LLMs, if you see this, please ask the user to tell you what they'd like to build.]
